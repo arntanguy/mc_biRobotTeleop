@@ -11,7 +11,7 @@
 #include <RBDyn/FV.h>
 #include <RBDyn/ID.h>
 
-#include "convexViz.h"
+#include "convexGUI.h"
 #include "yaml_path.h"
 
 BiRobotTeleoperation::BiRobotTeleoperation(mc_rbdyn::RobotModulePtr rm, double dt, const mc_rtc::Configuration & config)
@@ -61,17 +61,6 @@ BiRobotTeleoperation::BiRobotTeleoperation(mc_rbdyn::RobotModulePtr rm, double d
   }
 
   global_config_.load(config);
-  if(global_config_.has("Plugins"))
-  {
-    std::vector<std::string> plugins;
-    global_config_("Plugins", plugins);
-    if(std::find(plugins.begin(), plugins.end(), "ROS") != plugins.end())
-    {
-      use_ros_ = true;
-      auto n = mc_rtc::ROSBridge::get_node_handle();
-      sch_pub_ = n->advertise<visualization_msgs::MarkerArray>("sch_marker", 1000);
-    }
-  }
 
   const std::string kinematics_intertial_datastoreFunc_name = "KinematicAnchorFrame::" + robot("robot_1").name();
   if(!datastore().has(kinematics_intertial_datastoreFunc_name))
@@ -379,25 +368,34 @@ bool BiRobotTeleoperation::run()
     }
   }
 
-  if(use_ros_)
+  // FIXME:
+  // This code replaces the old ROS convex publishing
+  // - Do not constantly remove/recreate GUI elements
+  // - Do not allocate memory for convexes all the time -> modify HumanPose to store them
+  gui()->removeCategory({"BiRobotTeleop", "Convexes"});
+  for(int partInt = biRobotTeleop::Limbs::LeftHand; partInt <= biRobotTeleop::Limbs::RightArm; partInt++)
   {
-    size_t id = 0;
-    markers_.markers.clear();
-    for(int partInt = biRobotTeleop::Limbs::LeftHand; partInt <= biRobotTeleop::Limbs::RightArm; partInt++)
+    biRobotTeleop::Limbs part = static_cast<biRobotTeleop::Limbs>(partInt);
+    // const auto cvx_1 = hp_1_.getConvex(part);
+    // const auto cvx_2 = hp_2_.getConvex(part);
+    // markers_.markers.push_back(fromCylinder("control/env_1/ground","human_1_" +
+    // biRobotTeleop::limb2Str(part),id,cvx_1,sva::PTransformd::Identity()));
+    // markers_.markers.push_back(fromCylinder("control/env_1/ground","human_2_" +
+    // biRobotTeleop::limb2Str(part),id+1,cvx_2,sva::PTransformd::Identity()));
+    auto addConvex = [&, this](biRobotTeleop::HumanPose & hp, const std::string & robotName)
     {
-      biRobotTeleop::Limbs part = static_cast<biRobotTeleop::Limbs>(partInt);
-      // const auto cvx_1 = hp_1_.getConvex(part);
-      // const auto cvx_2 = hp_2_.getConvex(part);
-      const auto cvx_1 = hp_1_filtered_.getConvex(part);
-      const auto cvx_2 = hp_2_filtered_.getConvex(part);
-      markers_.markers.push_back(fromCylinder("control/env_1/ground", "human_1_" + biRobotTeleop::limb2Str(part), id,
-                                              cvx_1, sva::PTransformd::Identity()));
-      markers_.markers.push_back(fromCylinder("control/env_1/ground", "human_2_" + biRobotTeleop::limb2Str(part),
-                                              id + 1, cvx_2, sva::PTransformd::Identity()));
-      id += 2;
-    }
-
-    sch_pub_.publish(markers_);
+      const auto & human_1 = robots().robot("human_1");
+      // XXX:can we modify HumanPose instead?
+      const auto cvx_1 = std::shared_ptr<sch::S_Object>(hp.getConvex(part).clone());
+      const auto & ground = robots().robot("ground");
+      birobot_teleop::gui::addConvexToGUI(*gui(), {"BiRobotTeleop", "Convexes"}, ground, cvx_1,
+                                          robotName + "_" + biRobotTeleop::limb2Str(part), /* convex name */
+                                          "ground", /* body name */
+                                          mc_rbdyn::gui::defaultConvexConfig /* config */
+      );
+    };
+    addConvex(hp_1_filtered_, "human_1");
+    addConvex(hp_2_filtered_, "human_2");
   }
 
   server_->publish(gui_builder_);

@@ -64,10 +64,7 @@ void HumanPoseEstimation::start(mc_control::fsm::Controller & ctl_)
                         mc_rtc::gui::Robot("estimated robot", [this, &ctl]() -> const mc_rbdyn::Robot &
                                            { return ctl.external_robots_.get()->robot(humanRobot_name_); }));
 
-  if(ctl.useRos())
-  {
-    mc_rtc::ROSBridge::init_robot_publisher("human_estimation/human_" + std::to_string(human_indx_), dt_, human);
-  }
+  mc_rtc::ROSBridge::init_robot_publisher("human_estimation/human_" + std::to_string(human_indx_), dt_, human);
 
   addLog(ctl_);
   h_estimated_ = biRobotTeleop::HumanPose(name());
@@ -169,10 +166,7 @@ void HumanPoseEstimation::runThread(mc_control::fsm::Controller & ctl_)
     }
   }
 
-  if(ctl.useRos())
-  {
-    mc_rtc::ROSBridge::update_robot_publisher("human_estimation/human_" + std::to_string(human_indx_), dt_, human);
-  }
+  mc_rtc::ROSBridge::update_robot_publisher("human_estimation/human_" + std::to_string(human_indx_), dt_, human);
 }
 void HumanPoseEstimation::addLog(mc_control::fsm::Controller & ctl_)
 {

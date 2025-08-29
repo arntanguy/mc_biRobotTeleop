@@ -5,10 +5,8 @@
 #include <mc_control/fsm/Controller.h>
 #include <mc_control/mc_controller.h>
 #include <mc_rbdyn/RobotLoader.h>
+#include <mc_rbdyn/Robots.h>
 #include <mc_rtc/gui.h>
-
-#include <ros/ros.h>
-#include <visualization_msgs/MarkerArray.h>
 
 #include "api.h"
 #include <biRobotTeleop/HumanRobotDataReceiver.h>
@@ -145,11 +143,6 @@ struct BiRobotTeleoperation_DLLAPI BiRobotTeleoperation : public mc_control::fsm
     return gui_builder_;
   }
 
-  const bool useRos() const noexcept
-  {
-    return use_ros_;
-  }
-
   bool joystickButtonPressed(const joystickButtonInputs input);
 
   void hardEmergency()
@@ -215,12 +208,7 @@ private:
 
   mc_rtc::Configuration global_config_;
 
-  ros::Publisher sch_pub_;
-  visualization_msgs::MarkerArray markers_;
-
   bool useFilteredData_ = false;
-
-  bool use_ros_ = false;
 
   size_t ctl_count_ = 0;
 

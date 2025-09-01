@@ -3,11 +3,11 @@ MainRobot:
   module: RHPS1 # desired robot module
 Enabled: BiRobotTeleoperation
 
-Timestep: 0.002
+Timestep: 0.005
 
 GUIServer:
   IPC:
-    Socket: /tmp/mc_rtc_2
+    Socket: /tmp/mc_rtc
   TCP:
     # Binding host, * binds to all interfaces
     Host: "*"

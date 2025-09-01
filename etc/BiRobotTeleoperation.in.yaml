@@ -25,13 +25,14 @@ robots:
     module: HRP4::ImpactGrippers
   robot_2:
     module: RHPS1
-  # human_1:
-  #   module: human
-  # human_2:
-  #   module: human
+  # If no human robot, get data from network through gui
+  human_1:
+    module: human
+  human_2:
+    module: human
 
-#mc_humanMap.yaml
-@HumanMap.yaml
+@mc_humanMap.yaml
+# HumanMap.yaml
 
 # General constraints, always on
 constraints:
@@ -249,7 +250,8 @@ states:
     base: Parallel
     states:
       - Robot::Teleop
-      # - Human
+      # - Human adds tasks on human robot
+      - Human
       - biTeleop::Sequence
     delays:
       biTeleop::Sequence: 0.5
@@ -306,4 +308,5 @@ UDPPlugin:
 # Replay
 # UDPPlugin
 # OpenVRPlugin
-Plugins: [ROS,mc_joystick_plugin,OpenVRPlugin]
+# Plugins: [ROS,mc_joystick_plugin,OpenVRPlugin]
+Plugins: [ROS,mc_joystick_plugin]

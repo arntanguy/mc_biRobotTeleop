@@ -93,7 +93,7 @@ BiRobotTeleoperation::BiRobotTeleoperation(mc_rbdyn::RobotModulePtr rm, double d
     hp_2_.addDataToGUI(gui_builder_);
   }
 
-  if(config("local_controller")("display_human_pose"))
+  if(config("local_controller")("display_human_pose", true))
   {
     hp_1_.addPoseToGUI(*gui().get(), false);
     hp_2_.addPoseToGUI(*gui().get(), false);

@@ -62,6 +62,10 @@ foreach(
   insert_content(${CMAKE_CURRENT_BINARY_DIR}/etc/BiRobotTeleoperation.yaml
                  ${CMAKE_CURRENT_BINARY_DIR}/etc/${FILE}.yaml ${FILE}.yaml)
 endforeach()
+install(
+  FILES "etc/mc_rtc.yaml"
+  DESTINATION "${MC_CONTROLLER_RUNTIME_INSTALL_PREFIX}/etc/BiRobotTeleoperation"
+)
 
 configure_file(etc/log-to-datastore.in.yaml
                "${CMAKE_CURRENT_BINARY_DIR}/etc/log-to-datastore.yaml")

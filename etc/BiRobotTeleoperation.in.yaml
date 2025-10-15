@@ -48,6 +48,7 @@ constraints:
 # - type: dynamics
 #   robot: robot_2
 # Collision constraint
+collisions: []
 # collisions:
 # - type: collision
 #   r1: robot_1

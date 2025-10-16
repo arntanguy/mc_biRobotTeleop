@@ -166,7 +166,7 @@ void HumanPoseEstimation::runThread(mc_control::fsm::Controller & ctl_)
     }
   }
 
-  mc_rtc::ROSBridge::update_robot_publisher("human_estimation/human_" + std::to_string(human_indx_), dt_, human);
+  // mc_rtc::ROSBridge::update_robot_publisher("human_estimation/human_" + std::to_string(human_indx_), dt_, human);
 }
 void HumanPoseEstimation::addLog(mc_control::fsm::Controller & ctl_)
 {

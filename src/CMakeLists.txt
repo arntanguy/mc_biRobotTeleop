@@ -1,9 +1,9 @@
 set(CONFIG_PATH "${MC_CONTROLLER_RUNTIME_INSTALL_PREFIX}/etc/BiRobotTask.yaml")
 set(BiRobotTask_CONFIG_PATH ${CONFIG_PATH})
 configure_file(yaml_path.in.h ${CMAKE_CURRENT_SOURCE_DIR}/yaml_path.h @ONLY)
+configure_file(config.in.h "${CMAKE_BINARY_DIR}/include/config.h" @ONLY)
 
 set(controller_SRC BiRobotTeleoperation.cpp)
-
 set(controller_HDR BiRobotTeleoperation.h)
 
 add_library(${PROJECT_NAME} SHARED ${controller_SRC} ${controller_HDR})
@@ -15,6 +15,11 @@ target_link_libraries(${PROJECT_NAME} PUBLIC mc_rtc::mc_control
 target_link_libraries(${PROJECT_NAME}
                       PUBLIC biRobotTeleop::mc_tasks_biRobotTeleop)
 target_link_libraries(${PROJECT_NAME} PUBLIC biRobotTeleop::utils_biRobotTeleop)
+target_include_directories(
+  ${PROJECT_NAME}
+  PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
+         $<BUILD_INTERFACE:${CMAKE_BINARY_DIR}/include>
+         $<INSTALL_INTERFACE:include>)
 
 install(TARGETS ${PROJECT_NAME} DESTINATION ${MC_RTC_LIBDIR})
 

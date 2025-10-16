@@ -1,4 +1,6 @@
 add_fsm_state_simple(BiRobotTeleoperation_Initial)
+add_fsm_state_simple(TeleopSequence)
+target_link_libraries(TeleopSequence PUBLIC mc_rtc::fsm::states::Parallel)
 add_fsm_state_simple(BiRobotTeleoperation_Task)
 add_fsm_state_simple(HandDamping)
 add_fsm_state_simple(JointsDamping)

@@ -16,7 +16,34 @@
 
 struct BiRobotTeleoperation_DLLAPI BiRobotTeleoperation : public mc_control::fsm::Controller
 {
+  enum class Mode
+  {
+    None,
+    SimulationSingle,
+    SingleVR,
+    DualVR
+  };
+  inline std::string to_string(Mode mode)
+  {
+    switch(mode)
+    {
+      case Mode::None:
+        return "None";
+      case Mode::SimulationSingle:
+        return "SimulationSingle";
+      case Mode::SingleVR:
+        return "SingleVR";
+      case Mode::DualVR:
+        return "DualVR";
+      default:
+        return "Unknown";
+    }
+  }
+
   BiRobotTeleoperation(mc_rbdyn::RobotModulePtr rm, double dt, const mc_rtc::Configuration & config);
+
+  void init_();
+  void reset_();
 
   bool run() override;
 
@@ -191,7 +218,14 @@ struct BiRobotTeleoperation_DLLAPI BiRobotTeleoperation : public mc_control::fsm
 
   std::vector<sva::ForceVecd> external_wrench_calib_;
 
-private:
+  inline Mode mode() const noexcept
+  {
+    return mode_;
+  }
+
+protected:
+  Mode mode_{Mode::None};
+  Mode previousMode_{Mode::None};
   std::unique_ptr<mc_control::ControllerServer> server_;
   mc_rtc::gui::StateBuilder gui_builder_;
   bool emergency_ = false;

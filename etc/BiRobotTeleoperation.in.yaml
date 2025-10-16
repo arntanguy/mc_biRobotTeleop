@@ -26,12 +26,12 @@ robots:
   robot_2:
     module: RHPS1
   # If no human robot, get data from network through gui
-  human_1:
-    module: human
-  human_2:
-    module: human
+  # human_1:
+  #   module: human
+  # human_2:
+  #   module: human
 
-@mc_humanMap.yaml
+# @mc_humanMap.yaml
 # HumanMap.yaml
 
 # General constraints, always on
@@ -248,12 +248,20 @@ states:
       - [Teleop::Sequence,CANCEL,ChoiceMain,Auto]
 
   Teleop::Sequence:
-    base: Parallel
+    base: TeleopSequence
+
+    # states for all modes
     states:
       - Robot::Teleop
-      # - Human adds tasks on human robot
-      - Human
       - biTeleop::Sequence
+#
+    # Override states for specific modes
+    Mode:
+      SimulationSingle:
+        states:
+          - Robot::Teleop
+          - Human # adds tasks on human robot
+          - biTeleop::Sequence
     delays:
       biTeleop::Sequence: 0.5
 

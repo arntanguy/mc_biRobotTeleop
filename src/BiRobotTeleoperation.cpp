@@ -11,12 +11,36 @@
 #include <RBDyn/FV.h>
 #include <RBDyn/ID.h>
 
+#include "config.h"
 #include "convexGUI.h"
 #include "yaml_path.h"
 
 BiRobotTeleoperation::BiRobotTeleoperation(mc_rbdyn::RobotModulePtr rm, double dt, const mc_rtc::Configuration & config)
 : mc_control::fsm::Controller(rm, dt, config)
 {
+}
+
+void BiRobotTeleoperation::reset(const mc_control::ControllerResetData & reset_data)
+{
+  mc_control::fsm::Controller::reset(reset_data);
+
+  auto & gui = *this->gui();
+  gui.addElement(this, {},
+                 mc_rtc::gui::Button("Simulation (single controller)", [this]() { mode_ = Mode::SimulationSingle; }));
+
+  // The initialisation logic is deferred until:
+  // - The user has selected a mode in the gui
+  // - An initial mode is defined in the FSM configuration
+  //
+  // The actual initialization happens in init_() and reset_()
+  run();
+}
+
+void BiRobotTeleoperation::init_()
+{
+  auto config = this->config();
+  const auto dt = this->timeStep;
+
   // std::cout << config_("states").dump() << std::endl;
   // std::cout << "//" << std::endl;
   // config_.load(mc_rtc::Configuration(BiRobotTask_CONFIG_PATH));
@@ -293,6 +317,42 @@ void BiRobotTeleoperation::create_collision_cstr(const mc_rtc::Configuration & c
 
 bool BiRobotTeleoperation::run()
 {
+  if(mode_ == Mode::None)
+  {
+    return mc_control::fsm::Controller::run();
+  }
+  if(mode_ != previousMode_)
+  {
+    gui()->removeElements(this); // Remove mode choice buttons
+    mc_rtc::log::info("[{}] Mode changed to {}", name_, to_string(mode_));
+
+    if(mode_ == Mode::SimulationSingle)
+    {
+      config().add("mode", "SimulationSingle");
+
+      mc_rtc::log::info("[{}] Selected Mode SimulationSingle", name_);
+      auto rm = mc_rbdyn::RobotLoader::get_robot_module("human");
+      mc_rtc::log::info("Loading robot 'human_1' from module 'human'");
+      loadRobot(rm, "human_1");
+      mc_rtc::log::info("Loading robot 'human_2' from module 'human'");
+      loadRobot(rm, "human_2");
+
+      config()("human_sim").add("active", true);
+
+      // Load mc_HumanMap.yaml
+      mc_rtc::log::info("Loading human map configuration from mc_HumanMap.yaml");
+      mc_rtc::ConfigurationFile humanMapConfig(std::string{biRobotTeleop::ETC_PATH_BUILD} + "mc_humanMap.yaml");
+      config().load(humanMapConfig);
+    }
+
+    if(previousMode_ == Mode::None)
+    {
+      mc_rtc::log::info("[{}] First init", name_);
+      init_();
+    }
+    reset_();
+    previousMode_ = mode_;
+  }
 
   if(joystickButtonPressed(joystickButtonInputs::B))
   {
@@ -465,10 +525,8 @@ bool BiRobotTeleoperation::joystickButtonPressed(const joystickButtonInputs inpu
   return false;
 }
 
-void BiRobotTeleoperation::reset(const mc_control::ControllerResetData & reset_data)
+void BiRobotTeleoperation::reset_()
 {
-  mc_control::fsm::Controller::reset(reset_data);
-
   auto & robot_2 = robots().robot("robot_2");
   auto & robot_1 = robots().robot("robot_1");
 

@@ -35,29 +35,25 @@ BiRobotTeleoperation::BiRobotTeleoperation(mc_rbdyn::RobotModulePtr rm, double d
   hp_1_filtered_ = biRobotTeleop::HumanPose("human_1_filtered");
   hp_2_filtered_ = biRobotTeleop::HumanPose("human_2_filtered");
 
-  if(config.has("collisions_with_joint_selection"))
+  if(auto collision_with_joint_selection =
+         config("collisions_with_joint_selection", mc_rtc::Configuration{}).find(robot().name()))
   {
-    if(config("collisions_with_joint_selection").has(this->robot().name()))
-    {
-      create_collision_cstr(config("collisions_with_joint_selection")(this->robot().name()));
-    }
+    create_collision_cstr(*collision_with_joint_selection);
   }
 
-  if(config.has("human_1"))
+  auto setConvex =
+      [&config](const std::string & robot, biRobotTeleop::HumanPose & hp, biRobotTeleop::HumanPose & hp_filtered)
   {
-    hp_1_.setCvx(config("human_1")("convex"));
-    hp_1_filtered_.setCvx(config("human_1")("convex"));
-  }
-  if(config.has("human_2"))
-  {
-    hp_2_.setCvx(config("human_2")("convex"));
-    hp_2_filtered_.setCvx(config("human_2")("convex"));
-  }
+    hp.setCvx(config(robot)("convex"));
+    hp_filtered.setCvx(config(robot)("convex"));
+  };
+  setConvex("human_1", hp_1_, hp_1_filtered_);
+  setConvex("human_2", hp_2_, hp_2_filtered_);
 
-  if(config.has("robot_limb_map"))
+  if(auto robotLimbMap = config.find("robot_limb_map"))
   {
-    r_1_.load(config("robot_limb_map")("robot_1"));
-    r_2_.load(config("robot_limb_map")("robot_2"));
+    r_1_.load((*robotLimbMap)("robot_1"));
+    r_2_.load((*robotLimbMap)("robot_2"));
   }
 
   global_config_.load(config);
@@ -104,35 +100,32 @@ BiRobotTeleoperation::BiRobotTeleoperation(mc_rbdyn::RobotModulePtr rm, double d
 
   distant_robot_name_ = (robot().name() == "robot_1") ? "robot_2" : "robot_1";
 
+  using namespace mc_rtc::gui;
   hp_rec_.init("receiver main", distant_human_name_, distant_robot_name_,
                "tcp://" + ip_ + ":" + std::to_string(pub_port_), "tcp://" + ip_ + ":" + std::to_string(sub_port_));
   hp_rec_.startConnection();
 
-  hp_rec_.subsbscribe("Emergency", mc_rtc::gui::Elements::Checkbox, {"BiRobotTeleop"}, "Emergency");
-  hp_rec_.subsbscribe("A", mc_rtc::gui::Elements::Checkbox, {"BiRobotTeleop"}, "A");
-  hp_rec_.subsbscribe("Y", mc_rtc::gui::Elements::Checkbox, {"BiRobotTeleop"}, "Y");
+  hp_rec_.subsbscribe("Emergency", Elements::Checkbox, {"BiRobotTeleop"}, "Emergency");
+  hp_rec_.subsbscribe("A", Elements::Checkbox, {"BiRobotTeleop"}, "A");
+  hp_rec_.subsbscribe("Y", Elements::Checkbox, {"BiRobotTeleop"}, "Y");
 
   hp_rec_.setSimulatedDelay(0);
 
-  gui_builder_.addElement({"BiRobotTeleop"},
-                          mc_rtc::gui::Checkbox("Online", [this]() -> bool { return true; }, [this]() {}));
-  gui_builder_.addElement({"BiRobotTeleop"}, mc_rtc::gui::RobotMsg(robot().name(), [this]() -> const mc_rbdyn::Robot &
-                                                                   { return robot(); }));
   gui_builder_.addElement(
       {"BiRobotTeleop"},
-      mc_rtc::gui::Checkbox("Emergency", [this]() -> const bool { return emergency_; }, [this]() {}));
-  gui_builder_.addElement(
-      {"BiRobotTeleop"},
-      mc_rtc::gui::Checkbox(
-          "A", [this]() -> const bool { return joystickButtonPressed(joystickButtonInputs::A); }, [this]() {}));
-  gui_builder_.addElement(
-      {"BiRobotTeleop"},
-      mc_rtc::gui::Checkbox(
-          "Y", [this]() -> const bool { return joystickButtonPressed(joystickButtonInputs::Y); }, [this]() {}));
+      Checkbox(
+          "Online", [this]() -> bool { return true; }, [this]() {}),
+      RobotMsg(robot().name(), [this]() -> const mc_rbdyn::Robot & { return robot(); }),
+      Checkbox(
+          "Emergency", [this]() -> const bool { return emergency_; }, [this]() {}),
+      Checkbox(
+          "A", [this]() -> const bool { return joystickButtonPressed(joystickButtonInputs::A); }, [this]() {}),
+      Checkbox("Y", [this]() -> const bool { return joystickButtonPressed(joystickButtonInputs::Y); }, [this]() {}));
+
   if(robots().robot("robot_2").module().name == "panda_default")
   {
-    gui_builder_.addElement({"BiRobotTeleop"}, mc_rtc::gui::RobotMsg("panda_robot", [this]() -> const mc_rbdyn::Robot &
-                                                                     { return robots().robot("robot_2"); }));
+    gui_builder_.addElement({"BiRobotTeleop"}, RobotMsg("panda_robot", [this]() -> const mc_rbdyn::Robot &
+                                                        { return robots().robot("robot_2"); }));
   }
   gui()->addElement(
       {"BiRobotTeleop"},
@@ -239,20 +232,14 @@ void BiRobotTeleoperation::create_collision_cstr(const mc_rtc::Configuration & c
   for(auto & conf : collisionConf)
   {
     mc_rtc::log::info("adding set {}", cstr_set_indx);
-    if(conf.has("iDist"))
-    {
-      iDist = conf("iDist");
-    }
-    if(conf.has("sDist"))
-    {
-      sDist = conf("sDist");
-    }
-    std::vector<std::string> bodies_1 = conf("b1");
+    conf("iDist", iDist);
+    conf("sDist", sDist);
+    auto bodies_1 = conf("b1", std::vector<std::string>{});
     if(bodies_1.size() == 0)
     {
       bodies_1 = robot_bodies;
     }
-    std::vector<std::string> bodies_2 = conf("b2");
+    auto bodies_2 = conf("b2", std::vector<std::string>{});
     if(bodies_2.size() == 0)
     {
       bodies_2 = robot_all_bodies;

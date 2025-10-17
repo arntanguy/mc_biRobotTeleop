@@ -15,8 +15,66 @@
 #include "convexGUI.h"
 #include "yaml_path.h"
 
+/**
+ * This function modifies the FSM configuration to add features specific to the BiRobotTeleoperation controller:
+ * - IncludeStates: allows to include additional states from external configuration files
+ * - IncludeObservers: allows to include additional observers from external configuration files
+ * - IncludGlobals: allows to include additional global configuration from external configuration files
+ *
+ * We might want to adapt what is included based on the selected mode.
+ */
+static inline mc_rtc::Configuration patchConfig(const mc_rtc::Configuration & config)
+{
+  using Mode = BiRobotTeleoperation::Mode;
+  mc_rtc::Configuration patchedConfig = config;
+  auto mode = BiRobotTeleoperation::from_string(config("mode", std::string{"None"}));
+  if(mode == Mode::None)
+  {
+    mc_rtc::log::error_and_throw(
+        "BiRobotTeleoperation mode is None, please specify a valid mode in the FSM configuration");
+  }
+  auto modeStr = BiRobotTeleoperation::to_string(mode);
+
+  auto includeNames = config("IncludeStates", std::vector<std::string>{});
+  std::for_each(includeNames.begin(), includeNames.end(),
+                [&patchedConfig](const std::string & includeName)
+                {
+                  mc_rtc::ConfigurationFile includedState(std::string{biRobotTeleop::ETC_PATH_BUILD} + includeName);
+                  mc_rtc::log::info("Loaded states configuration from {}", includedState.path());
+                  patchedConfig("states").load(includedState);
+                });
+
+  auto includeObservers = config("IncludeObservers", std::vector<std::string>{});
+  std::for_each(
+      includeObservers.begin(), includeObservers.end(),
+      [&patchedConfig](const std::string & includeName)
+      {
+        mc_rtc::ConfigurationFile includedObserver(std::string{biRobotTeleop::ETC_PATH_BUILD} + includeName);
+        mc_rtc::log::info("Loaded observer configuration from {}", includedObserver.path());
+        patchedConfig("ObserverPipelines").load(includedObserver("ObserverPipelines", mc_rtc::Configuration{}));
+        patchedConfig("observers").load(includedObserver);
+      });
+
+  auto includeGlobals = config("IncludeGlobals", std::vector<std::string>{});
+  std::for_each(includeGlobals.begin(), includeGlobals.end(),
+                [&patchedConfig](const std::string & includeName)
+                {
+                  mc_rtc::ConfigurationFile includedGlobal(std::string{biRobotTeleop::ETC_PATH_BUILD} + includeName);
+                  mc_rtc::log::info("Loaded global configuration from {}", includedGlobal.path());
+                  patchedConfig.load(includedGlobal);
+                });
+
+  mc_rtc::ConfigurationFile includedPlugins(std::string{biRobotTeleop::ETC_PATH} + "Plugins.yaml");
+  if(auto modePlugin = includedPlugins.find(modeStr))
+  {
+    patchedConfig.load(*modePlugin);
+  }
+
+  return patchedConfig;
+}
+
 BiRobotTeleoperation::BiRobotTeleoperation(mc_rbdyn::RobotModulePtr rm, double dt, const mc_rtc::Configuration & config)
-: mc_control::fsm::Controller(rm, dt, config)
+: mc_control::fsm::Controller(rm, dt, patchConfig(config))
 {
 }
 
@@ -24,15 +82,46 @@ void BiRobotTeleoperation::reset(const mc_control::ControllerResetData & reset_d
 {
   mc_control::fsm::Controller::reset(reset_data);
 
-  auto & gui = *this->gui();
-  gui.addElement(this, {},
-                 mc_rtc::gui::Button("Simulation (single controller)", [this]() { mode_ = Mode::SimulationSingle; }));
+  mode_ = from_string(config()("mode"));
+  mc_rtc::log::info("[{}] Mode is {}", name_, to_string(mode_));
 
-  // The initialisation logic is deferred until:
-  // - The user has selected a mode in the gui
-  // - An initial mode is defined in the FSM configuration
-  //
-  // The actual initialization happens in init_() and reset_()
+  if(mode_ == Mode::SimulationSingle)
+  {
+    config().add("mode", "SimulationSingle");
+
+    auto rm = mc_rbdyn::RobotLoader::get_robot_module("human");
+    mc_rtc::log::info("Loading robot 'human_1' from module '{}'", rm->name);
+    loadRobot(rm, "human_1");
+    mc_rtc::log::info("Loading robot 'human_2' from module '{}'", rm->name);
+    loadRobot(rm, "human_2");
+
+    config()("human_sim").add("active", true);
+
+    // Load mc_HumanMap.yaml
+    mc_rtc::log::info("Loading human map configuration from mc_HumanMap.yaml");
+    mc_rtc::ConfigurationFile humanMapConfig(std::string{biRobotTeleop::ETC_PATH_BUILD} + "mc_humanMap.yaml");
+    config().load(humanMapConfig);
+  }
+  else if(mode_ == Mode::SingleVR || mode_ == Mode::DualVR)
+  {
+    mc_rtc::log::info("[{}] Selected Mode SingleVR", name_);
+    auto rm = mc_rbdyn::RobotLoader::get_robot_module("simple_human");
+    // FIXME: disable for now (pb with align feet)
+    // mc_rtc::log::info("Loading robot 'human_1' from module '{}'", rm->name);
+    // loadRobot(rm, "human_1");
+    mc_rtc::log::info("Loading robot 'human_2' from module '{}'", rm->name);
+    loadRobot(rm, "human_2");
+
+    config()("human_sim").add("active", false);
+
+    // Load HumanMap.yaml
+    mc_rtc::log::info("Loading human map configuration from HumanMap.yaml");
+    mc_rtc::ConfigurationFile humanMapConfig(std::string{biRobotTeleop::ETC_PATH_BUILD} + "HumanMap.yaml");
+    config().load(humanMapConfig);
+  }
+
+  init_();
+  reset_();
   run();
 }
 
@@ -317,43 +406,6 @@ void BiRobotTeleoperation::create_collision_cstr(const mc_rtc::Configuration & c
 
 bool BiRobotTeleoperation::run()
 {
-  if(mode_ == Mode::None)
-  {
-    return mc_control::fsm::Controller::run();
-  }
-  if(mode_ != previousMode_)
-  {
-    gui()->removeElements(this); // Remove mode choice buttons
-    mc_rtc::log::info("[{}] Mode changed to {}", name_, to_string(mode_));
-
-    if(mode_ == Mode::SimulationSingle)
-    {
-      config().add("mode", "SimulationSingle");
-
-      mc_rtc::log::info("[{}] Selected Mode SimulationSingle", name_);
-      auto rm = mc_rbdyn::RobotLoader::get_robot_module("human");
-      mc_rtc::log::info("Loading robot 'human_1' from module 'human'");
-      loadRobot(rm, "human_1");
-      mc_rtc::log::info("Loading robot 'human_2' from module 'human'");
-      loadRobot(rm, "human_2");
-
-      config()("human_sim").add("active", true);
-
-      // Load mc_HumanMap.yaml
-      mc_rtc::log::info("Loading human map configuration from mc_HumanMap.yaml");
-      mc_rtc::ConfigurationFile humanMapConfig(std::string{biRobotTeleop::ETC_PATH_BUILD} + "mc_humanMap.yaml");
-      config().load(humanMapConfig);
-    }
-
-    if(previousMode_ == Mode::None)
-    {
-      mc_rtc::log::info("[{}] First init", name_);
-      init_();
-    }
-    reset_();
-    previousMode_ = mode_;
-  }
-
   if(joystickButtonPressed(joystickButtonInputs::B))
   {
     hardEmergency();

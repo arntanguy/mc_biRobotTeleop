@@ -23,7 +23,7 @@ struct BiRobotTeleoperation_DLLAPI BiRobotTeleoperation : public mc_control::fsm
     SingleVR,
     DualVR
   };
-  inline std::string to_string(Mode mode)
+  inline static std::string to_string(Mode mode)
   {
     switch(mode)
     {
@@ -38,6 +38,14 @@ struct BiRobotTeleoperation_DLLAPI BiRobotTeleoperation : public mc_control::fsm
       default:
         return "Unknown";
     }
+  }
+  inline static Mode from_string(const std::string & str)
+  {
+    if(str == "None") return Mode::None;
+    if(str == "SimulationSingle") return Mode::SimulationSingle;
+    if(str == "SingleVR") return Mode::SingleVR;
+    if(str == "DualVR") return Mode::DualVR;
+    return Mode::None; // or throw std::invalid_argument("Unknown Mode string")
   }
 
   BiRobotTeleoperation(mc_rbdyn::RobotModulePtr rm, double dt, const mc_rtc::Configuration & config);
@@ -225,7 +233,6 @@ struct BiRobotTeleoperation_DLLAPI BiRobotTeleoperation : public mc_control::fsm
 
 protected:
   Mode mode_{Mode::None};
-  Mode previousMode_{Mode::None};
   std::unique_ptr<mc_control::ControllerServer> server_;
   mc_rtc::gui::StateBuilder gui_builder_;
   bool emergency_ = false;

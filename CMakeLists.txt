@@ -21,7 +21,6 @@ set(INSTALL_PKG_CONFIG_FILE
 set(CXX_DISABLE_WERROR ON)
 
 # include(cmake/base.cmake)
-include(insert_content.cmake)
 
 # Check if the project is built inside mc_rtc
 if(NOT TARGET mc_rtc::mc_control)
@@ -55,12 +54,11 @@ foreach(
   Observers
   Stabilizer
   ForcesTasks
-  RobotLimbMap)
+  RobotLimbMap
+  HumanLimbMap)
 
   configure_file(etc/${FILE}.in.yaml
                  "${CMAKE_CURRENT_BINARY_DIR}/etc/${FILE}.yaml" @ONLY)
-  insert_content(${CMAKE_CURRENT_BINARY_DIR}/etc/BiRobotTeleoperation.yaml
-                 ${CMAKE_CURRENT_BINARY_DIR}/etc/${FILE}.yaml ${FILE}.yaml)
 endforeach()
 install(
   FILES "etc/mc_rtc.yaml"

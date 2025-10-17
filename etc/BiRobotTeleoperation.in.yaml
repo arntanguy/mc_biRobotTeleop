@@ -1,22 +1,17 @@
----
-# If true, the FSM transitions are managed by an external tool
 Managed: false
-# If true and the FSM is self-managed, transitions should be triggered
 StepByStep: true
-# Change idle behaviour, if true the state is kept until transition,
-# otherwise the FSM holds the last state until transition
 IdleKeepState: false
-# Where to look for state libraries
 
 StatesLibraries:
 - "@MC_STATES_DEFAULT_RUNTIME_INSTALL_PREFIX@"
 - "@MC_STATES_RUNTIME_INSTALL_PREFIX@"
-# Where to look for state files
 StatesFiles:
 - "@MC_STATES_DEFAULT_RUNTIME_INSTALL_PREFIX@/data"
 - "@MC_STATES_RUNTIME_INSTALL_PREFIX@/data"
-# If true, state factory will be more verbose
 VerboseStateFactory: false
+
+mode: SimulationSingle
+
 # Additional robots to load
 robots:
   ground:
@@ -25,14 +20,6 @@ robots:
     module: HRP4::ImpactGrippers
   robot_2:
     module: RHPS1
-  # If no human robot, get data from network through gui
-  # human_1:
-  #   module: human
-  # human_2:
-  #   module: human
-
-# @mc_humanMap.yaml
-# HumanMap.yaml
 
 # General constraints, always on
 constraints:
@@ -127,41 +114,25 @@ contacts:
   r1Surface: RightFoot
   r2Surface: AllGround
 
-@Observers.yaml
+# These files are merged with the 'states' element of this FSM configuration
+IncludeStates:
+  - HalfSitting.yaml
+  - BiRobotTasks.yaml
+  - ForcesTasks.yaml
+  - DampingTasks.yaml
+  - HumanTasks.yaml
+  - RobotTeleopTasks.yaml
+  - ForcesDisplay.yaml
+  - JointsDamping.yaml
+  - Stabilizer.yaml
 
-@RobotLimbMap.yaml
-
-human:
-  limb_map:
-    left_hand: "LHandLink"
-    right_hand: "RHandLink"
-    left_arm: "LArmLink"
-    right_arm: "RArmLink"
-    left_forearm: "LForearmLink"
-    right_forearm: "RForearmLink"
-    pelvis: "HipsLink"
+# These files are merged with the root element of this FSM configuration
+IncludeGlobals:
+  - RobotLimbMap.yaml
+  - HumanLimbMap.yaml
 
 
 states:
-
-@HalfSitting.yaml
-
-@BiRobotTasks.yaml
-
-@ForcesTasks.yaml
-
-@DampingTasks.yaml
-
-@HumanTasks.yaml
-
-@RobotTeleopTasks.yaml
-
-@ForcesDisplay.yaml
-
-@JointsDamping.yaml
-
-@Stabilizer.yaml
-
   Human::Trajectory:
     base: Parallel
     states:
@@ -314,8 +285,6 @@ UDPPlugin:
       ignoredJoints:
         joints: [R_HAND_J0, R_HAND_J1, L_HAND_J1, L_HAND_J0]
 
-# Replay
-# UDPPlugin
-# OpenVRPlugin
-# Plugins: [ROS,mc_joystick_plugin,OpenVRPlugin]
-Plugins: [ROS,mc_joystick_plugin]
+# Plugins are overridden per-mode by Plugins.yaml
+# Plugin configuration is merged with the above default configurations per-mode
+Plugins: []

@@ -30,8 +30,6 @@ target_link_libraries(${PROJECT_NAME}_controller PUBLIC ${PROJECT_NAME})
 
 add_subdirectory(states)
 
-message("HERE IS DIR ${CMAKE_INSTALL_PREFIX} ")
-
 install(
   TARGETS ${PROJECT_NAME}
   EXPORT "${PROJECT_NAME}Config"

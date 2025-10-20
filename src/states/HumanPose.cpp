@@ -84,8 +84,23 @@ void HumanPose::start(mc_control::fsm::Controller & ctl_)
                                           {
                                             mc_rbdyn::Robot & robot = ctl_.robots().robot(robot_name_);
                                             const auto X_0_RobotLink = robot.bodyPosW(robot_link_);
-                                            return X_link_sensor_ * X_0_RobotLink;
-                                          }));
+                                            return X_link_sensor_ * X_0_RobotLink; // position du sensor du robot avec l'offset ds le repere monde (calculée avec la pose du robot du controlleur)
+                                          }));  //X_0_robotTracker = pos récupérée par le tracker
+    
+    for(auto & device : human_deviceTolimbs_)
+    {
+      gui.addElement({"States", name(), "Robot sensor offset"},
+                      mc_rtc::gui::Transform("sensor pose for "+device.first,
+                                            [this, &ctl, device]() -> sva::PTransformd
+                                            {
+                                              biRobotTeleop::HumanPose & h = ctl.getHumanPose(human_indx_);
+                                              const biRobotTeleop::Limbs limb = device.second;
+                                              return h.getPose(limb); 
+                                            }));
+
+    }
+                                          
+
     gui.addElement({"States", name(), "Robot sensor offset", "Calibration"},
                    mc_rtc::gui::Button("Calibrate", [this, &ctl]()
                                        { calibrateSensorPose(ctl, calibration_robot_link_, calibration_device_); }));
@@ -105,6 +120,7 @@ void HumanPose::start(mc_control::fsm::Controller & ctl_)
                        [this](const Eigen::Vector3d & rpy)
                        { link_calib_offset_.rotation() = mc_rbdyn::rpyToMat(rpy * mc_rtc::constants::PI / 180.); }));
   }
+
 }
 
 bool HumanPose::run(mc_control::fsm::Controller & ctl_)
@@ -114,11 +130,12 @@ bool HumanPose::run(mc_control::fsm::Controller & ctl_)
   biRobotTeleop::HumanPose & h = ctl.getHumanPose(human_indx_);
   mc_rbdyn::Robot & robot = ctl.robots().robot(robot_name_);
 
-  if(ctl.robots().hasRobot("human_1"))
-  {
-    output("True");
-    return true;
-  }
+
+  // if(ctl.robots().hasRobot("human_1"))
+  // {
+  //   output("True");
+  //   return true;
+  // }
 
   if(ctl.hp_rec_.online() && robot_name_ != ctl.robot().name())
   {
@@ -161,6 +178,7 @@ bool HumanPose::run(mc_control::fsm::Controller & ctl_)
     auto & tracker_pose_func =
         ctl.datastore().get<std::function<sva::PTransformd(const std::string &)>>("OpenVRPlugin::getPoseByName");
 
+    
     auto & tracker_vel_func =
         ctl.datastore().get<std::function<sva::MotionVecd(const std::string &)>>("OpenVRPlugin::getVelocityByName");
 
@@ -173,11 +191,12 @@ bool HumanPose::run(mc_control::fsm::Controller & ctl_)
     const sva::PTransformd X_0_robotTracker = (has_tracker_func(robot_device_) && tracker_online_func(robot_device_))
                                                   ? tracker_pose_func(robot_device_)
                                                   : sva::PTransformd::Identity();
-
+    // std::cout << "xo robot racker for " << robot_device_ << " : \n" << X_0_robotTracker<<std::endl;
     const auto X_0_RobotLink = robot.bodyPosW(robot_link_);
 
     for(auto & device : human_deviceTolimbs_)
     {
+
       if(has_tracker_func(device.first) && tracker_online_func(device.first))
       {
         const sva::PTransformd X_0_trackerRaw = tracker_pose_func(device.first);
@@ -189,24 +208,26 @@ bool HumanPose::run(mc_control::fsm::Controller & ctl_)
             sva::PTransformd((X_0_tracker.inv()).rotation()) * tracker_vel_func(device.first);
         const biRobotTeleop::Limbs limb = device.second;
 
+
         if(checkNorm(X_0_robotTracker) || checkNorm(X_0_trackerRaw) || checkNorm(X_0_tracker))
         {
-          // mc_rtc::log::warning("[{}] tracker on limb {} not received\nKeeping the previous
-          // pose\n{}",name(),biRobotTeleop::limb2Str(limb),h.getPose(limb));
+          mc_rtc::log::warning("[{}] tracker on limb {} not received\nKeeping the previous pose\n{}",name(),biRobotTeleop::limb2Str(limb),h.getPose(limb));
           // mc_rtc::log::info(checkNorm(h.getPose(limb)));
           h.setVel(limb, sva::MotionVecd::Zero());
           if(online_data_count_[limb] >= offline_threshold_ && h.limbActive(limb))
           {
-            mc_rtc::log::warning("[{}] tracker on limb {} not received", name(), biRobotTeleop::limb2Str(limb));
+            mc_rtc::log::warning("[{}] tracker on limb {} not received, {}, {}, {}", name(), biRobotTeleop::limb2Str(limb), checkNorm(X_0_robotTracker) , !checkNorm(X_0_trackerRaw), !checkNorm(X_0_tracker));
             h.setLimbActiveState(limb, false);
           }
           else if(online_data_count_[limb] < offline_threshold_)
           {
             online_data_count_[limb] += 1;
+            
           }
         }
         else
         {
+          // mc_rtc::log::info("[{}] tracker on limb {} received", name(), biRobotTeleop::limb2Str(limb));
           h.setPose(limb, X_0_tracker);
           h.setVel(limb, v_tracker);
           online_data_count_[limb] == 0;

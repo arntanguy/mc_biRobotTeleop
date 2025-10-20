@@ -26,11 +26,13 @@ distant_controller:
   sub_port : 4242
   pub_port: 4343
   human_name: human_2 #or human_1
+  display_human_pose : true
 local_controller:
   human_name: human_1 #or human_2
+  display_human_pose : true
 
 human_sim:
-  active: true #if true the sensor data are overwritten by an external human controller
+  active: false #if true the sensor data are overwritten by an external human controller
   ip: localhost #host address of the simulated human controller
   sub_port : 4242
   pub_port: 4343

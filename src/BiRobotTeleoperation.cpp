@@ -428,13 +428,14 @@ bool BiRobotTeleoperation::run()
     }
   }
 
-  if(robots().hasRobot("human_1"))
+  if(robots().hasRobot("human_1")&&(robot("human_1").module().name == "human"))
   {
     mc_rbdyn::Robot & human_1 = robots().robot("human_1");
     mc_rbdyn::Robot & human_2 = robots().robot("human_2");
     updateHumanPose(human_1, hp_1_);
     updateHumanPose(human_2, hp_2_);
   }
+
 
   // Panda Close Loop
   if(global_config_.has("Franka")
@@ -597,7 +598,7 @@ void BiRobotTeleoperation::reset_()
     // robot_2.posW(sva::PTransformd(sva::RotZ(M_PI_2), Eigen::Vector3d(-0.6, 0., 0.)) * robot().posW() );
   }
 
-  if(robots().hasRobot("human_1"))
+  if(robots().hasRobot("human_1")&&(robot("human_1").module().name == "human"))
   {
     mc_rbdyn::Robot & human_1 = robots().robot("human_1");
     mc_rbdyn::Robot & human_2 = robots().robot("human_2");
@@ -618,6 +619,17 @@ void BiRobotTeleoperation::reset_()
       // human_1.posW(sva::PTransformd(sva::RotZ(M_PI), Eigen::Vector3d(0.4 + 0.6 + 0.4, 0., 0.)) * human_2.posW() );
       human_1.posW(sva::PTransformd(sva::RotZ(M_PI), Eigen::Vector3d(0.4, 0, 0.15)) * robot_2.posW()); // 0.7
     }
+  }
+
+  else{
+
+    mc_rbdyn::Robot & human_1 = robots().robot("human_1");
+    mc_rbdyn::Robot & human_2 = robots().robot("human_2");
+
+    human_1.posW(sva::PTransformd(sva::RotZ(M_PI), Eigen::Vector3d(0.4, 0, 0.15)) * robot_2.posW()); // 0.7
+
+    human_2.posW(sva::PTransformd(sva::RotZ(M_PI), Eigen::Vector3d(0.4, 0., 0.15))
+                 * robot_1.posW());
   }
 }
 

@@ -20,6 +20,7 @@ void HumanPoseEstimation::configure(const mc_rtc::Configuration & config)
     for(auto & l : limbs)
     {
       target_limbs_.push_back(biRobotTeleop::str2Limb(l));
+      mc_rtc::log::info("Limb {} added as {}", l, biRobotTeleop::str2Limb(l));
     }
   }
 

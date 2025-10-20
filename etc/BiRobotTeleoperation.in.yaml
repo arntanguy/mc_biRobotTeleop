@@ -10,7 +10,7 @@ StatesFiles:
 - "@MC_STATES_RUNTIME_INSTALL_PREFIX@/data"
 VerboseStateFactory: false
 
-mode: SimulationSingle
+mode: SingleVR
 
 # Additional robots to load
 robots:

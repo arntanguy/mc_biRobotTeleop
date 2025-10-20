@@ -285,6 +285,36 @@ UDPPlugin:
       ignoredJoints:
         joints: [R_HAND_J0, R_HAND_J1, L_HAND_J1, L_HAND_J0]
 
+
+OpenVRPlugin:
+  deviceMap: #[name ; ID]
+  - ["RightArm_human_2","LHR-9F12939E"]
+  - ["RightHand_human_2","LHR-A9EEA216"]
+  - ["LeftArm_human_1","LHR-A108F2F9"]
+  - ["LeftHand_human_1","LHR-A469DE6D"]
+  - ["Pelvis_human_2", "LHR-E488461D"]
+  - ["base station", "LHB-9D7575BD"]
+  - ["base station 2", "LHB-49EE85A8"]
+  - ["Head", "LHR-AF7F4782"]
+  - ["Robot_HRP4", "LHR-659508D3"]
+  - ["Robot_RHPS1", "LHR-659508D2"]
+
+  sleep: 10 #ms
+
+  localData: false
+  distantData:
+    port: 12338
+    ip: 10.4.5.100
+
+
 # Plugins are overridden per-mode by Plugins.yaml
 # Plugin configuration is merged with the above default configurations per-mode
 Plugins: []
+
+
+
+# Replay
+# UDPPlugin
+# OpenVRPlugin
+
+

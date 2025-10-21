@@ -297,7 +297,7 @@ OpenVRPlugin:
   - ["base station 2", "LHB-49EE85A8"]
   - ["Head", "LHR-AF7F4782"]
   - ["Robot_HRP4", "LHR-659508D3"]
-  - ["Robot_RHPS1", "LHR-659508D2"]
+  - ["Robot_RHPS1", "LHR-D756B287"]
 
   sleep: 10 #ms
 
@@ -316,5 +316,3 @@ Plugins: []
 # Replay
 # UDPPlugin
 # OpenVRPlugin
-
-

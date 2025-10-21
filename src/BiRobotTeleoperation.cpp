@@ -108,7 +108,7 @@ void BiRobotTeleoperation::reset(const mc_control::ControllerResetData & reset_d
     auto rm = mc_rbdyn::RobotLoader::get_robot_module("simple_human");
     // FIXME: disable for now (pb with align feet)
     // mc_rtc::log::info("Loading robot 'human_1' from module '{}'", rm->name);
-    // loadRobot(rm, "human_1");
+    loadRobot(rm, "human_1");
     mc_rtc::log::info("Loading robot 'human_2' from module '{}'", rm->name);
     loadRobot(rm, "human_2");
 
@@ -428,14 +428,13 @@ bool BiRobotTeleoperation::run()
     }
   }
 
-  if(robots().hasRobot("human_1")&&(robot("human_1").module().name == "human"))
+  if(robots().hasRobot("human_1") && (robot("human_1").module().name == "human"))
   {
     mc_rbdyn::Robot & human_1 = robots().robot("human_1");
     mc_rbdyn::Robot & human_2 = robots().robot("human_2");
     updateHumanPose(human_1, hp_1_);
     updateHumanPose(human_2, hp_2_);
   }
-
 
   // Panda Close Loop
   if(global_config_.has("Franka")
@@ -475,6 +474,19 @@ bool BiRobotTeleoperation::run()
   auto publishConvex = [&, this]()
   {
     gui()->removeCategory({"BiRobotTeleop", "Convexes"});
+    auto addConvex = [&, this](biRobotTeleop::HumanPose & hp, const std::string & robotName, biRobotTeleop::Limbs part)
+    {
+      const auto & human_1 = robots().robot("human_1");
+      // XXX:can we modify HumanPose instead?
+      const auto cvx_1 = std::shared_ptr<sch::S_Object>(hp.getConvex(part).clone());
+      const auto & ground = robots().robot("ground");
+      birobot_teleop::gui::addConvexToGUI(*gui(), {"BiRobotTeleop", "Convexes"}, ground, cvx_1,
+                                          robotName + "_" + biRobotTeleop::limb2Str(part), /* convex name */
+                                          "ground", /* body name */
+                                          mc_rbdyn::gui::defaultConvexConfig /* config */
+      );
+    };
+
     for(int partInt = biRobotTeleop::Limbs::LeftHand; partInt <= biRobotTeleop::Limbs::RightArm; partInt++)
     {
       biRobotTeleop::Limbs part = static_cast<biRobotTeleop::Limbs>(partInt);
@@ -484,20 +496,8 @@ bool BiRobotTeleoperation::run()
       // biRobotTeleop::limb2Str(part),id,cvx_1,sva::PTransformd::Identity()));
       // markers_.markers.push_back(fromCylinder("control/env_1/ground","human_2_" +
       // biRobotTeleop::limb2Str(part),id+1,cvx_2,sva::PTransformd::Identity()));
-      auto addConvex = [&, this](biRobotTeleop::HumanPose & hp, const std::string & robotName)
-      {
-        const auto & human_1 = robots().robot("human_1");
-        // XXX:can we modify HumanPose instead?
-        const auto cvx_1 = std::shared_ptr<sch::S_Object>(hp.getConvex(part).clone());
-        const auto & ground = robots().robot("ground");
-        birobot_teleop::gui::addConvexToGUI(*gui(), {"BiRobotTeleop", "Convexes"}, ground, cvx_1,
-                                            robotName + "_" + biRobotTeleop::limb2Str(part), /* convex name */
-                                            "ground", /* body name */
-                                            mc_rbdyn::gui::defaultConvexConfig /* config */
-        );
-      };
-      addConvex(hp_1_filtered_, "human_1");
-      addConvex(hp_2_filtered_, "human_2");
+      addConvex(hp_1_filtered_, "human_1", part);
+      addConvex(hp_2_filtered_, "human_2", part);
     }
   };
 
@@ -598,7 +598,7 @@ void BiRobotTeleoperation::reset_()
     // robot_2.posW(sva::PTransformd(sva::RotZ(M_PI_2), Eigen::Vector3d(-0.6, 0., 0.)) * robot().posW() );
   }
 
-  if(robots().hasRobot("human_1")&&(robot("human_1").module().name == "human"))
+  if(robots().hasRobot("human_1") && (robot("human_1").module().name == "human"))
   {
     mc_rbdyn::Robot & human_1 = robots().robot("human_1");
     mc_rbdyn::Robot & human_2 = robots().robot("human_2");
@@ -621,15 +621,15 @@ void BiRobotTeleoperation::reset_()
     }
   }
 
-  else{
+  else
+  {
 
     mc_rbdyn::Robot & human_1 = robots().robot("human_1");
     mc_rbdyn::Robot & human_2 = robots().robot("human_2");
 
     human_1.posW(sva::PTransformd(sva::RotZ(M_PI), Eigen::Vector3d(0.4, 0, 0.15)) * robot_2.posW()); // 0.7
 
-    human_2.posW(sva::PTransformd(sva::RotZ(M_PI), Eigen::Vector3d(0.4, 0., 0.15))
-                 * robot_1.posW());
+    human_2.posW(sva::PTransformd(sva::RotZ(M_PI), Eigen::Vector3d(0.4, 0., 0.15)) * robot_1.posW());
   }
 }
 

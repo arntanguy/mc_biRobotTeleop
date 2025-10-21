@@ -5,6 +5,7 @@
 
 #include "../BiRobotTeleoperation.h"
 #include <mc_joystick_plugin/joystick_inputs.h>
+#include <mc_rtc_ros/ros.h>
 
 void HumanPoseEstimation::configure(const mc_rtc::Configuration & config)
 {
@@ -49,11 +50,11 @@ void HumanPoseEstimation::start(mc_control::fsm::Controller & ctl_)
   }
 
   auto robots = ctl.external_robots_;
-  humanRobot_name_ = "human_" + std::to_string(human_indx_) + "_estimated";
+  humanRobot_name_ = "human_" + std::to_string(human_indx_ + 1) + "_estimated";
 
   mc_rbdyn::RobotModulePtr robot_ptr = mc_rbdyn::RobotLoader::get_robot_module("simple_human", humanRobot_name_);
 
-  mc_rbdyn::Robot & human = robots.get()->load(humanRobot_name_, *robot_ptr);
+  mc_rbdyn::Robot & human = robots->load(humanRobot_name_, *robot_ptr);
   human.forwardKinematics();
   human.forwardVelocity();
   human.forwardAcceleration();
@@ -62,10 +63,9 @@ void HumanPoseEstimation::start(mc_control::fsm::Controller & ctl_)
                                                     { return ctl.external_robots_.get()->robot(humanRobot_name_); }));
 
   ctl.gui()->addElement({"States", name()},
-                        mc_rtc::gui::Robot("estimated robot", [this, &ctl]() -> const mc_rbdyn::Robot &
+                        mc_rtc::gui::Robot(humanRobot_name_, [this, &ctl]() -> const mc_rbdyn::Robot &
                                            { return ctl.external_robots_.get()->robot(humanRobot_name_); }));
-
-  mc_rtc::ROSBridge::init_robot_publisher("human_estimation/human_" + std::to_string(human_indx_), dt_, human);
+  mc_rtc::ROSBridge::init_robot_publisher("control/" + humanRobot_name_, ctl.timeStep, human);
 
   addLog(ctl_);
   h_estimated_ = biRobotTeleop::HumanPose(name());
@@ -167,7 +167,7 @@ void HumanPoseEstimation::runThread(mc_control::fsm::Controller & ctl_)
     }
   }
 
-  // mc_rtc::ROSBridge::update_robot_publisher("human_estimation/human_" + std::to_string(human_indx_), dt_, human);
+  mc_rtc::ROSBridge::update_robot_publisher("control/" + humanRobot_name_, dt_, human);
 }
 void HumanPoseEstimation::addLog(mc_control::fsm::Controller & ctl_)
 {

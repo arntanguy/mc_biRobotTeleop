@@ -7,20 +7,14 @@
 #include "../BiRobotTeleoperation.h"
 #include <mc_joystick_plugin/joystick_inputs.h>
 
-void HumanPose::configure(const mc_rtc::Configuration & config)
+void HumanPose::start(mc_control::fsm::Controller & ctl_)
 {
-
-  config_.load(config);
   if(config_.has("calibration"))
   {
     config_("calibration")("robot_link", calibration_robot_link_);
     config_("calibration")("device", calibration_device_);
     config_("calibration")("link_calib_offset", link_calib_offset_);
   }
-}
-
-void HumanPose::start(mc_control::fsm::Controller & ctl_)
-{
   auto & ctl = static_cast<BiRobotTeleoperation &>(ctl_);
   const auto & config = ctl.getGlobalConfig();
 
@@ -274,10 +268,9 @@ void HumanPose::calibrateSensorPose(mc_control::fsm::Controller & ctl_,
                                                 ? tracker_pose_func(robot_device_)
                                                 : sva::PTransformd::Identity(); // Vive tracker on the robot
 
-  // R_ELBOW_P_LINK
   const auto X_0_RobotRefLink = robot.frame(robot_link_).position();
   // + offset frame
-  const auto X_0_RobotLink = link_calib_offset_ * X_0_RobotRefLink;
+  const auto X_0_RobotLink = link_calib_offset_ * robot.frame(robot_link).position();
 
   // Hand tracker (on human) for calibration
   if(has_tracker_func(device) && tracker_online_func(device))

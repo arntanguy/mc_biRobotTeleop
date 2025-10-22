@@ -298,6 +298,7 @@ OpenVRPlugin:
   - ["Head", "LHR-AF7F4782"]
   - ["Robot_HRP4", "LHR-659508D3"]
   - ["Robot_RHPS1", "LHR-D756B287"]
+  - ["Pelvis_human_1", "LHR-66106DA7"]
 
   sleep: 10 #ms
 

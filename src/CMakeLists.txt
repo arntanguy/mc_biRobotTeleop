@@ -3,8 +3,8 @@ set(BiRobotTask_CONFIG_PATH ${CONFIG_PATH})
 configure_file(yaml_path.in.h ${CMAKE_CURRENT_SOURCE_DIR}/yaml_path.h @ONLY)
 configure_file(config.in.h "${CMAKE_BINARY_DIR}/include/config.h" @ONLY)
 
-set(controller_SRC BiRobotTeleoperation.cpp)
-set(controller_HDR BiRobotTeleoperation.h)
+set(controller_SRC BiRobotTeleoperation.cpp HumanPoseEstimationJob.cpp)
+set(controller_HDR BiRobotTeleoperation.h HumanPoseEstimationJob.h)
 
 add_library(${PROJECT_NAME} SHARED ${controller_SRC} ${controller_HDR})
 set_target_properties(${PROJECT_NAME}

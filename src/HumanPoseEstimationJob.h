@@ -1,6 +1,6 @@
 #pragma once
 
-#include <mc_rtc/AsyncJob.h>
+#include <mc_rtc/threading/AsyncJob.h>
 
 #include "BiRobotTeleoperation.h"
 #include <mc_rtc_ros/ros.h>
@@ -65,7 +65,7 @@ protected:
  * computeJob performs the actual estimation using a least-mean square optimization
  */
 struct HumanPoseEstimationJob
-: public mc_rtc::MakeAsyncJob<HumanPoseEstimationJob, HumanPoseEstimationInput, HumanPoseEstimationResult>
+: public mc_rtc::threading::MakeAsyncJob<HumanPoseEstimationJob, HumanPoseEstimationInput, HumanPoseEstimationResult>
 {
   // Read-only members
   std::string humanRobot_name_;

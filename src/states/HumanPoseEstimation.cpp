@@ -26,7 +26,10 @@ void HumanPoseEstimation::start(mc_control::fsm::Controller & ctl_)
 
   // Initialize ros publisher
   mc_rtc::log::info("init robot publisher for {}", "control/" + humanRobot_name);
-  mc_rtc::ROSBridge::init_robot_publisher("control/" + humanRobot_name, ctl.timeStep, human, false, true);
+
+  rpub_ = std::make_unique<mc_rtc::RobotPublisher>("control/" + humanRobot_name + "/",
+                                                   mc_rtc::ROSBridge::get_publisher_timestep(), ctl.timeStep);
+  rpub_->init(human, false);
 
   ctl.getGUIBuilder().addElement({"BiRobotTeleop", "Estimated Human"},
                                  mc_rtc::gui::Robot(humanRobot_name,
@@ -68,7 +71,7 @@ bool HumanPoseEstimation::run(mc_control::fsm::Controller & ctl_)
     human.forwardVelocity();
     human.forwardAcceleration();
     // mc_rtc::log::info("Update robot publisher \"control/{}\"", job_->humanRobot_name_);
-    mc_rtc::ROSBridge::update_robot_publisher("control/" + job_->humanRobot_name_, ctl.timeStep, human);
+    rpub_->update(ctl.timeStep, human);
   }
 
   output("True");

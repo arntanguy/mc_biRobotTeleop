@@ -5,13 +5,17 @@ vim.lsp.config('yamlls',
     settings = {
       yaml = {
         schemas = {
-          ["https://jrl.cnrs.fr/mc_rtc/schemas/mc_rtc/mc_rtc.json"] = "**/mc_rtc.yaml",
+          ["https://jrl.cnrs.fr/mc_rtc/schemas/mc_rtc/mc_rtc.json"] =
+            {
+              "**/mc_rtc.yaml",
+              "etc/mc_rtc_r1_h2.yaml",
+              "etc/mc_rtc_r2_h1.yaml"
+            },
           ["https://jrl.cnrs.fr/mc_rtc/schemas/mc_control/FSMController.json"] = "etc/BiRobotTeleoperation.in.yaml",
           ["https://jrl.cnrs.fr/mc_rtc/schemas/mc_control/FSMStates.json"] = "src/states/data/*.yaml",
           ["https://jrl.cnrs.fr/mc_rtc/schemas/mc_control/FSMStates.json"] = {
             "etc/BiRobotTasks.in.yaml",
             "etc/BiRobotTasks.in.yaml",
-            "etc/BiRobotTeleoperation.in.yaml",
             "etc/DampingTasks.in.yaml",
             "etc/ForcesDisplay.in.yaml",
             "etc/ForcesTasks.in.yaml",

@@ -179,8 +179,8 @@ void BiRobotTeleoperation::init_()
         { return sva::interpolate(robot.surfacePose("LeftFoot"), robot.surfacePose("RightFoot"), 0.5); });
   }
 
-  int server_pub_port = config("server")("sub_port");
-  int server_sub_port = config("server")("pub_port");
+  int server_pub_port = config("server")("pub_port");
+  int server_sub_port = config("server")("sub_port");
 
   config("distant_controller")("ip", ip_);
   config("distant_controller")("pub_port", pub_port_);
@@ -523,22 +523,9 @@ void BiRobotTeleoperation::updateDistantHumanRobot()
   auto & h = getHumanPose(distant_human_indx_);
   h.updateHumanState(hp_rec_.getHumanPose());
   auto & robot = robots().robot(distant_robot_name_);
-  if(hp_rec_.online() && robot.name() == hp_rec_.getRobot().name())
+  if(hp_rec_.online() && robot.name() == hp_rec_.robotName())
   {
-    robot.mbc().q = hp_rec_.getRobot().mbc().q;
-    robot.mbc().alpha = hp_rec_.getRobot().mbc().alpha;
-    // robot.mbc().alphaD = hp_rec_.getRobot().mbc().alphaD;
-    robot.posW(hp_rec_.getRobot().posW());
-
-    // const auto & msg = hp_rec_.getRobotMsg();
-    // robot.mbc().q = rbd::vectorToParam(robot.mb(),msg.q);
-    // robot.mbc().alpha = rbd::vectorToParam(robot.mb(),msg.alpha);
-    // // robot.mbc().alphaD = rbd::vectorToParam(robot.mb(),msg.alphaD);
-    // robot.posW(msg.posW);
-
-    rbd::forwardKinematics(robot.mb(), robot.mbc());
-    rbd::forwardVelocity(robot.mb(), robot.mbc());
-    rbd::forwardAcceleration(robot.mb(), robot.mbc());
+    hp_rec_.updateRobot(robot);
   }
 }
 

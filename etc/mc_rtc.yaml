@@ -22,9 +22,9 @@ server:
   pub_port: 4346
 
 distant_controller:
-  ip: localhost #host address of the distant controller
-  sub_port : 4242
-  pub_port: 4343
+  ip: 10.4.5.100 #host address of the distant controller
+  sub_port : 4243
+  pub_port: 4342
   human_name: human_2 #or human_1
   display_human_pose : true
 local_controller:

@@ -230,10 +230,11 @@ bool HumanPose::run(mc_control::fsm::Controller & ctl_)
     }
   }
 
-  if(human_sim_ && human_sim_rec_.getRobot().name() == "human")
+  if(human_sim_ && human_sim_rec_.robotName() == "human")
   {
-    const mc_rbdyn::Robot & human_robot = human_sim_rec_.getRobot();
-    ctl.updateHumanPose(human_robot, h);
+    // XXX: inefficient
+    const auto human_robots = human_sim_rec_.getRobots();
+    ctl.updateHumanPose(human_robots->robot(), h);
   }
 
   output("True");

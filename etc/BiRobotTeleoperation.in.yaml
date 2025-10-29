@@ -10,7 +10,7 @@ StatesFiles:
 - "@MC_STATES_RUNTIME_INSTALL_PREFIX@/data"
 VerboseStateFactory: false
 
-mode: SingleVR
+mode: DualVR
 
 # Additional robots to load
 robots:
@@ -254,13 +254,35 @@ states:
     - RobotHand_2
 
   MainState:
-    base: Parallel
+    base: TeleopSequence
+
+    # Default states (if not specified per-mode)
     states:
     - HumanPoseData_human_2
     - HumanPoseData_human_1
     - HumanEstimation_1
     - HumanEstimation_2
     - Teleop::Main
+
+    robot_1:
+      Mode:
+        DualVR:
+          states:
+          - HumanPoseData_human_2
+          # - HumanPoseData_human_1
+          - HumanEstimation_1
+          - HumanEstimation_2
+          - Teleop::Main
+
+    robot_2:
+      Mode:
+        DualVR:
+          states:
+          # - HumanPoseData_human_2
+          - HumanPoseData_human_1
+          - HumanEstimation_1
+          - HumanEstimation_2
+          - Teleop::Main
 
 transitions:
 - [BiRobotTeleoperation_Initial, OK, MainState, Auto]

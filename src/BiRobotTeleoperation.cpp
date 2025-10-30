@@ -344,12 +344,12 @@ void BiRobotTeleoperation::create_collision_cstr(const mc_rtc::Configuration & c
     conf("iDist", iDist);
     conf("sDist", sDist);
     auto bodies_1 = conf("b1", std::vector<std::string>{});
-    if(bodies_1.size() == 0)
+    if(bodies_1.empty())
     {
       bodies_1 = robot_bodies;
     }
     auto bodies_2 = conf("b2", std::vector<std::string>{});
-    if(bodies_2.size() == 0)
+    if(bodies_2.empty())
     {
       bodies_2 = robot_all_bodies;
     }

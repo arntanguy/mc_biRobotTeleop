@@ -20,7 +20,7 @@ robots:
   robot_1:
     module: HRP4::ImpactGrippers
   robot_2:
-    module: RHPS1
+    module: RHPS1_forceshoe_forceshoe_lirmm_lirmm
 
 # General constraints, always on
 constraints:

@@ -1,3 +1,4 @@
+---
 GoHalfSitting_1:
   base: HalfSitting
   robot: robot_1
@@ -12,8 +13,8 @@ GoHalfSitting_2:
 GoHalfSitting:
   base: Parallel
   states:
-    - GoHalfSitting_1
-    - GoHalfSitting_2
+  - GoHalfSitting_1
+  - GoHalfSitting_2
 
 # GoHalfSitting:
 #   base: MetaTasks

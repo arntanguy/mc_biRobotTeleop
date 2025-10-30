@@ -1,3 +1,4 @@
+---
 Stabilizer:
   base: StabilizerStandingState
   stiffness: 5

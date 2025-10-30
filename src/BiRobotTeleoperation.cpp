@@ -319,20 +319,16 @@ void BiRobotTeleoperation::resetToRealRobot(const std::string & name)
 void BiRobotTeleoperation::create_collision_cstr(const mc_rtc::Configuration & config)
 {
   std::vector<mc_rbdyn::Collision> collisions;
-  std::vector<std::string> robot_bodies;
+  auto robot_bodies = config("simplified_all_bodies", std::vector<std::string>{});
   double iDist = config("iDist");
   double sDist = config("sDist");
   double default_iDist = iDist;
   double default_sDist = sDist;
   int cstr_set_indx = 0;
 
-  if(config.has("simplified_all_bodies"))
+  if(robot_bodies.empty())
   {
-    robot_bodies = config("simplified_all_bodies");
-  }
-  else
-  {
-    for(const auto & bd : this->robot().module().mb.bodies())
+    for(const auto & bd : robot().module().mb.bodies())
     {
       robot_bodies.push_back(bd.name());
     }
@@ -377,15 +373,13 @@ void BiRobotTeleoperation::create_collision_cstr(const mc_rtc::Configuration & c
       {
         if(*bd1 != *bd2)
         {
-          if(!this->robot().hasBody(*bd1))
+          if(!robot().hasBody(*bd1))
           {
-            mc_rtc::log::error("Discarding collision with {} because it does not exist in {}", *bd1,
-                               this->robot().name());
+            mc_rtc::log::error("Discarding collision with {} because it does not exist in {}", *bd1, robot().name());
           }
-          else if(!this->robot().hasBody(*bd2))
+          else if(!robot().hasBody(*bd2))
           {
-            mc_rtc::log::error("Discarding collision with {} because it does not exist in {}", *bd2,
-                               this->robot().name());
+            mc_rtc::log::error("Discarding collision with {} because it does not exist in {}", *bd2, robot().name());
           }
           else
           {
@@ -401,7 +395,7 @@ void BiRobotTeleoperation::create_collision_cstr(const mc_rtc::Configuration & c
     cstr_set_indx += 1;
   }
   this->addCollisions(this->robot().name(), this->robot().name(), collisions);
-  mc_rtc::log::success("Self Collisions setted");
+  mc_rtc::log::success("[{}] Self Collisions added", name_);
 }
 
 bool BiRobotTeleoperation::run()

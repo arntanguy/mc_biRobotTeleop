@@ -1,6 +1,9 @@
 #include "BiRobotTeleoperation.h"
 
+#include <mc_control/ControllerServer.h>
+#include <mc_rbdyn/RobotLoader.h>
 #include <mc_rtc/ConfigurationHelpers.h>
+#include <mc_rtc/gui.h>
 #include <mc_rtc/gui/RobotMsg.h>
 #include <mc_tasks/biRobotTeleopTask.h>
 

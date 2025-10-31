@@ -51,6 +51,7 @@ foreach(
   HalfSitting
   HumanMap
   mc_humanMap
+  mc_humanMap_SimulationSingle
   Observers
   Stabilizer
   ForcesTasks

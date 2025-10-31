@@ -2,9 +2,11 @@
 
 #include <mc_control/ControllerServer.h>
 #include <mc_rbdyn/RobotLoader.h>
+#include <mc_rtc/Configuration.h>
 #include <mc_rtc/ConfigurationHelpers.h>
 #include <mc_rtc/gui.h>
 #include <mc_rtc/gui/RobotMsg.h>
+#include <mc_rtc/logging.h>
 #include <mc_tasks/biRobotTeleopTask.h>
 
 #include <RBDyn/Coriolis.h>
@@ -101,14 +103,16 @@ void BiRobotTeleoperation::reset(const mc_control::ControllerResetData & reset_d
     config()("human_sim").add("active", true);
 
     // Load mc_HumanMap.yaml
-    mc_rtc::log::info("Loading human map configuration from mc_HumanMap.yaml");
-    mc_rtc::ConfigurationFile humanMapConfig(std::string{biRobotTeleop::ETC_PATH_BUILD} + "mc_humanMap.yaml");
+    mc_rtc::log::info("Loading human map configuration from mc_HumanMap_SimulationSingle.yaml");
+    mc_rtc::ConfigurationFile humanMapConfig(std::string{biRobotTeleop::ETC_PATH_BUILD}
+                                             + "mc_humanMap_SimulationSingle.yaml");
     config().load(humanMapConfig);
   }
   else if(mode_ == Mode::SingleVR || mode_ == Mode::DualVR)
   {
     mc_rtc::log::info("[{}] Selected Mode SingleVR", name_);
-    auto rm = mc_rbdyn::RobotLoader::get_robot_module("simple_human");
+    auto estimationModule = config()("estimation_module", std::string{"simple_human"});
+    auto rm = mc_rbdyn::RobotLoader::get_robot_module(estimationModule);
     // auto rm = mc_rbdyn::RobotLoader::get_robot_module("human");
     // FIXME: disable for now (pb with align feet)
     // mc_rtc::log::info("Loading robot 'human_1' from module '{}'", rm->name);
@@ -119,9 +123,17 @@ void BiRobotTeleoperation::reset(const mc_control::ControllerResetData & reset_d
     config()("human_sim").add("active", false);
 
     // Load HumanMap.yaml
-    mc_rtc::log::info("Loading human map configuration from HumanMap.yaml");
-    mc_rtc::ConfigurationFile humanMapConfig(std::string{biRobotTeleop::ETC_PATH_BUILD} + "HumanMap.yaml");
-    config().load(humanMapConfig);
+    mc_rtc::Configuration humanMapConfig;
+    if(estimationModule == "simple_human")
+    {
+      mc_rtc::log::info("Loading human map configuration for module {} from HumanMap.yaml", estimationModule);
+      config().load(mc_rtc::Configuration(std::string{biRobotTeleop::ETC_PATH_BUILD} + "HumanMap.yaml"));
+    }
+    else
+    {
+      mc_rtc::log::info("Loading human map configuration for module {} from mc_humanMap.yaml", estimationModule);
+      config().load(std::string{biRobotTeleop::ETC_PATH_BUILD} + "mc_humanMap.yaml");
+    }
   }
 
   init_();

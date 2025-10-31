@@ -5,14 +5,14 @@ human_1:
     pelvis:
       offset:
         #mc_human
-        rotation: [0, -1.57, -1.57]
+        rotation: [0, 0, 0]
     arm:
       radius: 0.05
       length: 0.2
       offset:
         # mc_human
         left:
-          rotation: [0, 0, 3.14]
+          rotation: [1.57, 0, 0]
         right:
           rotation: [-1.57, 0, 0]
     forearm:
@@ -21,7 +21,7 @@ human_1:
       offset:
         # mc_human
         left:
-          rotation: [0, 0, 3.14]
+          rotation: [1.57, 0, 0]
         right:
           rotation: [-1.57, 0, 0]
     hand:
@@ -30,7 +30,7 @@ human_1:
       offset:
         # mc_human
         left:
-          rotation: [0, 3.14, 3.14]
+          rotation: [1.57, 0, 0]
         right:
           rotation: [-1.57, 0, 0]
 

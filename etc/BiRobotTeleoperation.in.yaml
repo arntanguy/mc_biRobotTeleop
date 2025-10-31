@@ -12,6 +12,9 @@ StatesFiles:
 VerboseStateFactory: false
 
 mode: DualVR
+# human or simple_human
+# estimation_module: simple_human
+estimation_module: human
 
 # Additional robots to load
 robots:
@@ -123,7 +126,6 @@ IncludeStates:
 IncludeGlobals:
 - RobotLimbMap.yaml
 - HumanLimbMap.yaml
-
 
 states:
   Human::Trajectory:

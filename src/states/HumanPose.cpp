@@ -9,12 +9,6 @@
 
 void HumanPose::start(mc_control::fsm::Controller & ctl_)
 {
-  if(config_.has("calibration"))
-  {
-    config_("calibration")("robot_link", calibration_robot_link_);
-    config_("calibration")("device", calibration_device_);
-    config_("calibration")("link_calib_offset", link_calib_offset_);
-  }
   auto & ctl = static_cast<BiRobotTeleoperation &>(ctl_);
   const auto & config = ctl.getGlobalConfig();
 
@@ -25,6 +19,16 @@ void HumanPose::start(mc_control::fsm::Controller & ctl_)
   }
   robot_name_ = human_indx_ == 1 ? "robot_1" : "robot_2";
   mc_rtc::log::info("[{}] human is human_{}", name(), human_indx_ + 1);
+
+  biRobotTeleop::RobotPose r = (robot_name_ == "robot_1") ? ctl.r_1_ : ctl.r_2_;
+
+  if(config_.has("calibration"))
+  {
+    config_("calibration")("robot_link", calibration_robot_link_);
+    calibration_robot_link_ = r.getLinksMap().at(biRobotTeleop::str2Limb(calibration_robot_link_));
+    config_("calibration")("device", calibration_device_);
+    config_("calibration")("link_calib_offset", link_calib_offset_);
+  }
 
   offline_threshold_ = config("offline_threshold", 100);
 
@@ -49,6 +53,7 @@ void HumanPose::start(mc_control::fsm::Controller & ctl_)
 
     config_("robot_device", robot_device_);
     config_("robot_link", robot_link_);
+    robot_link_ = r.getLinksMap().at(biRobotTeleop::str2Limb(robot_link_));
     config_("link_sensor_transfo")(robot_name_, X_link_sensor_);
   }
   else
@@ -202,8 +207,8 @@ bool HumanPose::run(mc_control::fsm::Controller & ctl_)
 
         if(checkNorm(X_0_robotTracker) || checkNorm(X_0_trackerRaw) || checkNorm(X_0_tracker))
         {
-          mc_rtc::log::warning("[{}] tracker on limb {} not received\nKeeping the previous pose\n{}", name(),
-                               biRobotTeleop::limb2Str(limb), h.getPose(limb));
+          // mc_rtc::log::warning("[{}] tracker on limb {} not received\nKeeping the previous pose\n{}", name(),
+          //                      biRobotTeleop::limb2Str(limb), h.getPose(limb));
           // mc_rtc::log::info(checkNorm(h.getPose(limb)));
           h.setVel(limb, sva::MotionVecd::Zero());
           if(online_data_count_[limb] >= offline_threshold_ && h.limbActive(limb))

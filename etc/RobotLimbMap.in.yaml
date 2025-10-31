@@ -1,6 +1,6 @@
 ---
 robot_limb_map:
-  robot_1:
+  hrp4:
     left_hand:
       name: "l_wrist"
     right_hand:
@@ -15,7 +15,9 @@ robot_limb_map:
       name: "R_ELBOW_P_LINK"
     pelvis:
       name: "body"
-  robot_2:
+    head:
+      name: "NECK_P_LINK"
+  rhps1:
     left_hand:
       name: "L_WRIST_Y_LINK"
     right_hand:
@@ -30,3 +32,5 @@ robot_limb_map:
       name: "R_ELBOW_Y_LINK"
     pelvis:
       name: "BODY"
+    head:
+      name: "HEAD_P_LINK"

@@ -20,7 +20,7 @@ RobotDamping_2:
   human_indx: 1
   task:
     unactiveJoints: ["Root", "WAIST_P", "WAIST_R", "WAIST_Y"]
-    frame: R_WRIST_Y_S
+    frame: RightHand
 
 BiTeleop_Damping_1_Hand:
   base: HandDamping
@@ -30,7 +30,7 @@ BiTeleop_Damping_1_Hand:
   task:
     name: Damping_Robot_1_LeftHand
     dimWeight: [0, 0, 0, 1, 1, 1]
-    frame: L_WRIST_Y_LINK
+    frame: LeftHand
     weight: 10000
     stiffness: 200
     unactiveJoints: ["Root", "CHEST_P", "CHEST_Y"]
@@ -43,32 +43,32 @@ BiTeleop_Damping_2_Hand:
   task:
     name: Damping_Robot_2_RightHand
     unactiveJoints: ["Root", "WAIST_P", "WAIST_R", "WAIST_Y"]
-    frame: R_WRIST_Y_S
+    frame: RightHand
 
 BiTeleop_Damping_1_Forearm:
   base: BiTeleop_Damping_1_Hand
   human_targetLimb: LeftForearm
   task:
     name: Damping_Robot_1_LefForearm
-    frame: L_ELBOW_P_LINK
+    frame: LeftForearm
 
 BiTeleop_Damping_2_Forearm:
   base: BiTeleop_Damping_2_Hand
   human_targetLimb: RightForearm
   task:
     name: Damping_Robot_2_RightForearm
-    frame: R_ELBOW_P_S
+    frame: RightForearm
 
 BiTeleop_Damping_1_Arm:
   base: BiTeleop_Damping_1_Hand
   human_targetLimb: LeftArm
   task:
     name: Damping_Robot_1_LefArm
-    frame: R_SHOULDER_Y_LINK
+    frame: LeftArm
 
 BiTeleop_Damping_2_Arm:
   base: BiTeleop_Damping_2_Hand
   human_targetLimb: RightArm
   task:
     name: Damping_Robot_2_RightArm
-    frame: R_SHOULDER_Y_S
+    frame: RightArm

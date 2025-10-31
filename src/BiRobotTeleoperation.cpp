@@ -105,7 +105,7 @@ void BiRobotTeleoperation::reset(const mc_control::ControllerResetData & reset_d
   else if(mode_ == Mode::SingleVR || mode_ == Mode::DualVR)
   {
     mc_rtc::log::info("[{}] Selected Mode SingleVR", name_);
-    auto rm = mc_rbdyn::RobotLoader::get_robot_module("simple_human");
+    auto rm = mc_rbdyn::RobotLoader::get_robot_module("human");
     // FIXME: disable for now (pb with align feet)
     // mc_rtc::log::info("Loading robot 'human_1' from module '{}'", rm->name);
     loadRobot(rm, "human_1");
@@ -148,8 +148,8 @@ void BiRobotTeleoperation::init_()
   hp_1_filtered_ = biRobotTeleop::HumanPose("human_1_filtered");
   hp_2_filtered_ = biRobotTeleop::HumanPose("human_2_filtered");
 
-  if(auto collision_with_joint_selection =
-         config("collisions_with_joint_selection", mc_rtc::Configuration{}).find(robot().name()))
+  if(auto collision_with_joint_selection = config("collisions_with_joint_selection", mc_rtc::Configuration{})
+                                               .find(robots().robot(robot().name()).module().name))
   {
     create_collision_cstr(*collision_with_joint_selection);
   }
@@ -165,8 +165,8 @@ void BiRobotTeleoperation::init_()
 
   if(auto robotLimbMap = config.find("robot_limb_map"))
   {
-    r_1_.load((*robotLimbMap)("robot_1"));
-    r_2_.load((*robotLimbMap)("robot_2"));
+    r_1_.load(*(config("robot_limb_map", mc_rtc::Configuration{}).find(robots().robot("robot_1").module().name)));
+    r_2_.load(*(config("robot_limb_map", mc_rtc::Configuration{}).find(robots().robot("robot_2").module().name)));
   }
 
   global_config_.load(config);

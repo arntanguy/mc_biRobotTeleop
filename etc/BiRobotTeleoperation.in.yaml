@@ -48,7 +48,7 @@ collisions: []
 #   useMinimal: true
 
 collisions_with_joint_selection:
-  robot_2:
+  rhps1:
     iDist: 0.01
     sDist: 0.005
     simplified_all_bodies: [BODY, HEAD_P_LINK, CHEST_Y_LINK, L_SHOULDER_P_LINK, L_SHOULDER_R_LINK, L_SHOULDER_Y_LINK,
@@ -68,7 +68,7 @@ collisions_with_joint_selection:
     - b1: [L_CROTCH_P_LINK]
       b2: [R_CROTCH_P_LINK]
       joints: []
-  robot_1:
+  hrp4:
     iDist: 0.01
     sDist: 0.005
     simplified_all_bodies: [body, NECK_P_LINK, torso, L_SHOULDER_P_LINK, L_SHOULDER_R_LINK, L_SHOULDER_Y_LINK,

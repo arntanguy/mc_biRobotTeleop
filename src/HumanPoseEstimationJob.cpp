@@ -20,6 +20,7 @@ HumanPoseEstimationJob::HumanPoseEstimationJob(BiRobotTeleoperation & ctl,
     }
   }
 
+  // for simple_human
   humanRobot_links_.setName(biRobotTeleop::Limbs::LeftArm, "L_ARM_LINK");
   humanRobot_links_.setName(biRobotTeleop::Limbs::RightArm, "R_ARM_LINK");
   humanRobot_links_.setName(biRobotTeleop::Limbs::RightForearm, "R_FOREARM_LINK");
@@ -28,6 +29,16 @@ HumanPoseEstimationJob::HumanPoseEstimationJob(BiRobotTeleoperation & ctl,
   humanRobot_links_.setName(biRobotTeleop::Limbs::LeftHand, "L_HAND_LINK");
   humanRobot_links_.setName(biRobotTeleop::Limbs::Pelvis, "TORSO_LINK");
   humanRobot_links_.setName(biRobotTeleop::Limbs::Head, "HEAD_LINK");
+
+  // for human
+  // humanRobot_links_.setName(biRobotTeleop::Limbs::LeftArm, "LArmLink");
+  // humanRobot_links_.setName(biRobotTeleop::Limbs::RightArm, "RArmLink");
+  // humanRobot_links_.setName(biRobotTeleop::Limbs::RightForearm, "RForearmLink");
+  // humanRobot_links_.setName(biRobotTeleop::Limbs::LeftForearm, "LForearmLink");
+  // humanRobot_links_.setName(biRobotTeleop::Limbs::RightHand, "RHandLink");
+  // humanRobot_links_.setName(biRobotTeleop::Limbs::LeftHand, "LHandLink");
+  // humanRobot_links_.setName(biRobotTeleop::Limbs::Pelvis, "TorsoLink");
+  // humanRobot_links_.setName(biRobotTeleop::Limbs::Head, "HeadLink");
 
   if(config.has("human_indx"))
   {
@@ -41,6 +52,7 @@ HumanPoseEstimationJob::HumanPoseEstimationJob(BiRobotTeleoperation & ctl,
   humanRobot_name_ = "human_" + std::to_string(human_indx_) + "_estimated";
   ext_robots = mc_rbdyn::Robots::make();
   auto rm = mc_rbdyn::RobotLoader::get_robot_module("simple_human", humanRobot_name_);
+  // auto rm = mc_rbdyn::RobotLoader::get_robot_module("human", humanRobot_name_);
   mc_rbdyn::Robot & human = ext_robots->load(humanRobot_name_, *rm);
   human.forwardKinematics();
   human.forwardVelocity();
@@ -78,8 +90,12 @@ HumanPoseEstimationResult HumanPoseEstimationJob::computeJob()
                      stiffness_);
   }
   const sva::PTransformd offset = h.getOffset(biRobotTeleop::Limbs::Pelvis);
+  // for simple_human
   addTransformTask(human, "TORSO_LINK", offset * h.getPose(biRobotTeleop::Limbs::Pelvis),
                    offset * h.getVel(biRobotTeleop::Limbs::Pelvis), stiffness_, 2);
+  // for human
+  // addTransformTask(human, "TorsoLink", offset * h.getPose(biRobotTeleop::Limbs::Pelvis),
+  //                  offset * h.getVel(biRobotTeleop::Limbs::Pelvis), stiffness_, 2);
   addPostureTask(human, 1, 1e-1);
   addMinAccTask(human, 1e-1);
 

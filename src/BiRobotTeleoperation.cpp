@@ -109,6 +109,7 @@ void BiRobotTeleoperation::reset(const mc_control::ControllerResetData & reset_d
   {
     mc_rtc::log::info("[{}] Selected Mode SingleVR", name_);
     auto rm = mc_rbdyn::RobotLoader::get_robot_module("simple_human");
+    // auto rm = mc_rbdyn::RobotLoader::get_robot_module("human");
     // FIXME: disable for now (pb with align feet)
     // mc_rtc::log::info("Loading robot 'human_1' from module '{}'", rm->name);
     loadRobot(rm, "human_1");

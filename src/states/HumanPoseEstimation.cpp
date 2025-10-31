@@ -21,6 +21,7 @@ void HumanPoseEstimation::start(mc_control::fsm::Controller & ctl_)
 
   // Add an external robot to display the output
   auto rm = mc_rbdyn::RobotLoader::get_robot_module("simple_human");
+  // auto rm = mc_rbdyn::RobotLoader::get_robot_module("human");
   auto & human = ctl.external_robots_->load(humanRobot_name, *rm);
   mc_rtc::log::info("[{}] Loaded external robot \"{}\"", name(), human.name());
 

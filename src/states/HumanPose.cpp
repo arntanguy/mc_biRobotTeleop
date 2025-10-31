@@ -9,6 +9,8 @@
 
 void HumanPose::start(mc_control::fsm::Controller & ctl_)
 {
+  viveTrackerModule_ = mc_rbdyn::RobotLoader::get_robot_module("vive_tracker");
+  viveTrackersRobots_ = mc_rbdyn::Robots::make();
   if(config_.has("calibration"))
   {
     config_("calibration")("robot_link", calibration_robot_link_);
@@ -59,17 +61,18 @@ void HumanPose::start(mc_control::fsm::Controller & ctl_)
   }
 
   auto & gui = *ctl.gui();
-  gui.addElement(this, {"States", name(), "Robot sensor offset"},
+  gui.addElement(
+      this, {"States", name(), "Robot sensor offset"},
 
-                 mc_rtc::gui::ArrayInput(
-                     "translation [m]", {"x", "y", "z"},
-                     [this]() -> const Eigen::Vector3d & { return X_link_sensor_.translation(); },
-                     [this](const Eigen::Vector3d & t) { X_link_sensor_.translation() = t; }),
-                 mc_rtc::gui::ArrayInput(
-                     "rotation [deg]", {"r", "p", "y"}, [this]() -> Eigen::Vector3d
-                     { return mc_rbdyn::rpyFromMat(X_link_sensor_.rotation()) * 180. / mc_rtc::constants::PI; },
-                     [this](const Eigen::Vector3d & rpy)
-                     { X_link_sensor_.rotation() = mc_rbdyn::rpyToMat(rpy * mc_rtc::constants::PI / 180.); }));
+      mc_rtc::gui::ArrayInput(
+          "translation [m]", {"x", "y", "z"},
+          [this]() -> const Eigen::Vector3d & { return X_link_sensor_.translation(); },
+          [this](const Eigen::Vector3d & t) { X_link_sensor_.translation() = t; }),
+      mc_rtc::gui::ArrayInput(
+          "rotation [deg]", {"r", "p", "y"}, [this]() -> Eigen::Vector3d
+          { return mc_rbdyn::rpyFromMat(X_link_sensor_.rotation().inverse()) * 180. / mc_rtc::constants::PI; },
+          [this](const Eigen::Vector3d & rpy)
+          { X_link_sensor_.rotation() = mc_rbdyn::rpyToMat(rpy * mc_rtc::constants::PI / 180.).inverse(); }));
   if(!human_sim_)
   {
     gui.addElement(
@@ -94,6 +97,20 @@ void HumanPose::start(mc_control::fsm::Controller & ctl_)
                                               const biRobotTeleop::Limbs limb = device.second;
                                               return h.getPose(limb);
                                             }));
+      if(!viveTrackersRobots_->hasRobot(device.first))
+      {
+        auto & viveRobot = viveTrackersRobots_->load(device.first, *viveTrackerModule_);
+        auto & gui = *ctl.gui();
+        gui.addElement({"States", name(), "Robot sensor offset"},
+                       mc_rtc::gui::Robot("Vive tracker sensor for " + device.first,
+                                          [this, &ctl, device, &viveRobot]() -> mc_rbdyn::Robot &
+                                          {
+                                            biRobotTeleop::HumanPose & h = ctl.getHumanPose(human_indx_);
+                                            const biRobotTeleop::Limbs limb = device.second;
+                                            viveRobot.posW(h.getPose(limb));
+                                            return viveRobot;
+                                          }));
+      }
     }
 
     gui.addElement({"States", name(), "Robot sensor offset", "Calibration"},

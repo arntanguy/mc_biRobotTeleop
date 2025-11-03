@@ -1,18 +1,22 @@
 #pragma once
 
-#include <mc_control/ControllerServer.h>
-#include <mc_control/MCController.h>
 #include <mc_control/fsm/Controller.h>
-#include <mc_control/mc_controller.h>
-#include <mc_rbdyn/RobotLoader.h>
-#include <mc_rbdyn/Robots.h>
-#include <mc_rtc/gui.h>
 
 #include "api.h"
 #include <biRobotTeleop/HumanRobotDataReceiver.h>
 #include <biRobotTeleop/HumanRobotPose.h>
 #include <mc_joystick_plugin/joystick_inputs.h>
 #include <mc_rtc_ros/ros.h>
+
+namespace mc_control
+{
+struct ControllerServer;
+}
+
+namespace mc_rtc::gui
+{
+struct StateBuilder;
+}
 
 struct BiRobotTeleoperation_DLLAPI BiRobotTeleoperation : public mc_control::fsm::Controller
 {

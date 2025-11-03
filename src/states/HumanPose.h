@@ -56,4 +56,7 @@ struct HumanPose : mc_control::fsm::State
   std::string calibration_device_;
   sva::PTransformd link_calib_offset_ = sva::PTransformd::Identity();
   sva::PTransformd X_0_calibTarget_ = sva::PTransformd::Identity();
+
+  mc_rbdyn::RobotModulePtr viveTrackerModule_ = nullptr;
+  mc_rbdyn::RobotsPtr viveTrackersRobots_ = nullptr;
 };

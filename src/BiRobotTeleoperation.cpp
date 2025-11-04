@@ -111,26 +111,17 @@ void BiRobotTeleoperation::reset(const mc_control::ControllerResetData & reset_d
   else if(mode_ == Mode::SingleVR || mode_ == Mode::DualVR)
   {
     mc_rtc::log::info("[{}] Selected Mode SingleVR", name_);
-    auto estimationModule = config()("estimation_module", std::string{"simple_human"});
-    auto rm = mc_rbdyn::RobotLoader::get_robot_module(estimationModule);
-    // auto rm = mc_rbdyn::RobotLoader::get_robot_module("human");
-    // FIXME: disable for now (pb with align feet)
-    // mc_rtc::log::info("Loading robot 'human_1' from module '{}'", rm->name);
-    loadRobot(rm, "human_1");
-    mc_rtc::log::info("Loading robot 'human_2' from module '{}'", rm->name);
-    loadRobot(rm, "human_2");
-
     config()("human_sim").add("active", false);
 
-    // Load HumanMap.yaml
+    auto estimationModule = config()("estimation_module", std::string{"simple_human"});
     mc_rtc::Configuration humanMapConfig;
     if(estimationModule == "simple_human")
-    {
+    { // Load HumanMap.yaml
       mc_rtc::log::info("Loading human map configuration for module {} from HumanMap.yaml", estimationModule);
       config().load(mc_rtc::Configuration(std::string{biRobotTeleop::ETC_PATH_BUILD} + "HumanMap.yaml"));
     }
     else
-    {
+    { // for mc_human
       mc_rtc::log::info("Loading human map configuration for module {} from mc_humanMap.yaml", estimationModule);
       config().load(std::string{biRobotTeleop::ETC_PATH_BUILD} + "mc_humanMap.yaml");
     }
@@ -618,14 +609,13 @@ void BiRobotTeleoperation::reset_()
     }
   }
 
-  else
+  else if(mode_ == Mode::SimulationSingle)
   {
 
     mc_rbdyn::Robot & human_1 = robots().robot("human_1");
     mc_rbdyn::Robot & human_2 = robots().robot("human_2");
 
     human_1.posW(sva::PTransformd(sva::RotZ(M_PI), Eigen::Vector3d(0.4, 0, 0.15)) * robot_2.posW()); // 0.7
-
     human_2.posW(sva::PTransformd(sva::RotZ(M_PI), Eigen::Vector3d(0.4, 0., 0.15)) * robot_1.posW());
   }
 }

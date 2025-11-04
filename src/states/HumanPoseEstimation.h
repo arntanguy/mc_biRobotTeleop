@@ -17,4 +17,5 @@ struct HumanPoseEstimation : mc_control::fsm::State
 protected:
   std::unique_ptr<HumanPoseEstimationJob> job_;
   std::unique_ptr<mc_rtc::RobotPublisher> rpub_;
+  bool humanScaleUpdated_ = false; // true when the RobotModelUpdate plugin has modified the human scale
 };

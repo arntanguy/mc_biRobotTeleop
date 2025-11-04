@@ -25,6 +25,21 @@ void HumanPoseEstimation::start(mc_control::fsm::Controller & ctl_)
   auto & human = ctl.external_robots_->load(humanRobot_name, *rm);
   mc_rtc::log::info("[{}] Loaded external robot \"{}\"", name(), human.name());
 
+  if(ctl.datastore().has("RobotModelUpdate::registerRobot"))
+  {
+    /**
+     * \NOTE: there is a bit of wizardry here:
+     * - We register the display "human" robot handled by this (HumanPoseEstimation) in the RobotModelUpdate plugin
+     *   This is fine as this robot is in the controller thread
+     * - To update the estimator's corresponding robot (HumanPoseEstimationJob), we listen to updates to the registed
+     * "human" robot from the plugin, and manually trigger a call to RobotModelUpdate::updateRobotModel on the
+     * estimator's robot when suitable (before running the next async job)
+     *  - This makes updates to the estimator's robot thread-safe
+     */
+    ctl.datastore().call("RobotModelUpdate::registerRobot", human,
+                         std::function<void()>([this]() { humanScaleUpdated_ = true; }));
+  }
+
   // Initialize ros publisher
   mc_rtc::log::info("init robot publisher for {}", "control/" + humanRobot_name);
 
@@ -53,6 +68,13 @@ bool HumanPoseEstimation::run(mc_control::fsm::Controller & ctl_)
     // initialize input when no job is running
     auto & input = job_->input();
     input.syncState(ctl, job_->human_indx_);
+
+    if(humanScaleUpdated_)
+    {
+      // trigger update to the corersponding estimator's robot when the RobotModelUpdate plugin has updated it
+      job_->updateRobotModelScale(ctl_);
+      humanScaleUpdated_ = false;
+    }
 
     // Job starts as an async task, use job.checkResult() later to know whether it is finished and retrive its value
     job_->startAsync();

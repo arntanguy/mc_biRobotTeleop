@@ -80,6 +80,22 @@ struct HumanPoseEstimationJob
 
   HumanPoseEstimationJob(BiRobotTeleoperation & ctl, const mc_rtc::Configuration & config, const std::string & name);
 
+  /**
+   * Update the estimator's robot model using the RobotModelUpdate plugin
+   * You are expected to manually call this function when the corresponding display robot scale changes in the plugin
+   * (see HumanPoseEstimation)
+   *
+   * \WARNING:
+   * - this function should never be called while an async job is running as this would not be thread-safe
+   */
+  void updateRobotModelScale(mc_control::fsm::Controller & ctl)
+  {
+    if(ctl.datastore().has("RobotModelUpdate::updateRobotModel"))
+    {
+      ctl.datastore().call("RobotModelUpdate::updateRobotModel", ext_robots->robot());
+    }
+  }
+
   // Async job performing the actual estimation
   HumanPoseEstimationResult computeJob();
 

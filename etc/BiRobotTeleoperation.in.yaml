@@ -330,6 +330,8 @@ OpenVRPlugin:
 Plugins: []
 
 
+RobotModelUpdate: {}
+
 
 # Replay
 # UDPPlugin

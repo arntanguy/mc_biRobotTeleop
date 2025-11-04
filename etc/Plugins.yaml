@@ -4,4 +4,5 @@ SimulationSingle:
 SingleVR:
   Plugins: [ROS, mc_joystick_plugin, OpenVRPlugin]
 DualVR:
-  Plugins: [ROS, mc_joystick_plugin, OpenVRPlugin]
+  Plugins: [ROS, mc_joystick_plugin, OpenVRPlugin, RobotModelUpdate]
+  # Plugins: [ROS, mc_joysticc_plugin, OpenVRPlugin]

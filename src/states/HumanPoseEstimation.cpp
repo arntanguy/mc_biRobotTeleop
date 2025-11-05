@@ -25,7 +25,7 @@ void HumanPoseEstimation::start(mc_control::fsm::Controller & ctl_)
   auto & human = ctl.external_robots_->load(humanRobot_name, *rm);
   mc_rtc::log::info("[{}] Loaded external robot \"{}\"", name(), human.name());
 
-  if(ctl.datastore().has("RobotModelUpdate::registerRobot"))
+  if(ctl.datastore().has("RobotModelUpdate_" + humanRobot_name + "::registerRobot"))
   {
     /**
      * \NOTE: there is a bit of wizardry here:
@@ -36,7 +36,7 @@ void HumanPoseEstimation::start(mc_control::fsm::Controller & ctl_)
      * estimator's robot when suitable (before running the next async job)
      *  - This makes updates to the estimator's robot thread-safe
      */
-    ctl.datastore().call("RobotModelUpdate::registerRobot", human,
+    ctl.datastore().call("RobotModelUpdate_" + humanRobot_name + "::registerRobot", human,
                          std::function<void()>([this]() { humanScaleUpdated_ = true; }));
   }
 
@@ -112,6 +112,11 @@ void HumanPoseEstimation::teardown(mc_control::fsm::Controller & ctl_)
 {
   auto & ctl = static_cast<BiRobotTeleoperation &>(ctl_);
   auto & robots = ctl.external_robots_;
+  auto & human = robots->robot(job_->humanRobot_name_);
+  if(ctl.datastore().has("RobotModelUpdate_" + job_->humanRobot_name_ + "::unregisterRobot"))
+  {
+    ctl.datastore().call("RobotModelUpdate_" + job_->humanRobot_name_ + "::unregisterRobot", human);
+  }
   const int indx = robots->robotIndex(job_->humanRobot_name_);
   robots->removeRobot(indx);
 }

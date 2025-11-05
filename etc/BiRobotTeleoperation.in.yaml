@@ -330,7 +330,10 @@ OpenVRPlugin:
 Plugins: []
 
 
-RobotModelUpdate: {}
+RobotModelUpdate:
+  pluginName: RobotModelUpdate_human_0_estimated
+RobotModelUpdate2:
+  pluginName: RobotModelUpdate_human_1_estimated
 
 
 # Replay

@@ -90,9 +90,9 @@ struct HumanPoseEstimationJob
    */
   void updateRobotModelScale(mc_control::fsm::Controller & ctl)
   {
-    if(ctl.datastore().has("RobotModelUpdate::updateRobotModel"))
+    if(ctl.datastore().has("RobotModelUpdate_" + humanRobot_name_ + "::updateRobotModel"))
     {
-      ctl.datastore().call("RobotModelUpdate::updateRobotModel", ext_robots->robot());
+      ctl.datastore().call("RobotModelUpdate_" + humanRobot_name_ + "::updateRobotModel", ext_robots->robot());
     }
   }
 

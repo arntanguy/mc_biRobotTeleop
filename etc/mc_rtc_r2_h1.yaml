@@ -3,6 +3,7 @@ MainRobot:
   name: robot_2 # for robot_1
   module: RHPS1_forceshoe_forceshoe_lirmm_lirmm # desired robot module
 Enabled: BiRobotTeleoperation
+Log: false
 
 Timestep: 0.005
 

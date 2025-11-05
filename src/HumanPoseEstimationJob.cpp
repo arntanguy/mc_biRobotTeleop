@@ -56,7 +56,7 @@ HumanPoseEstimationJob::HumanPoseEstimationJob(BiRobotTeleoperation & ctl,
     human_indx_ = ctl.getHumanIndx();
   }
 
-  humanRobot_name_ = "human_" + std::to_string(human_indx_) + "_estimated";
+  humanRobot_name_ = "human_" + std::to_string(human_indx_ + 1) + "_estimated";
   ext_robots = mc_rbdyn::Robots::make();
   auto rm = mc_rbdyn::RobotLoader::get_robot_module(estimationModule, humanRobot_name_);
   // auto rm = mc_rbdyn::RobotLoader::get_robot_module("human", humanRobot_name_);

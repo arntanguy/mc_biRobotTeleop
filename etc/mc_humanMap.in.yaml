@@ -1,5 +1,9 @@
 ---
-#human_1 paramters
+# Human parameters for "human" robot module
+# use convex -> limb name -> radius/length properties to use cylinders as convex shapes
+# otherwise the human robot's convexes are used
+
+# human_1 paramters
 human_1:
   convex:
     pelvis:
@@ -7,8 +11,8 @@ human_1:
         #mc_human
         rotation: [0, -1.57, -1.57]
     arm:
-      radius: 0.05
-      length: 0.2
+      # radius: 0.05
+      # length: 0.2
       offset:
         # mc_human
         left:
@@ -16,8 +20,8 @@ human_1:
         right:
           rotation: [-1.57, 0, 0]
     forearm:
-      radius: 0.03
-      length: 0.2
+      # radius: 0.03
+      # length: 0.2
       offset:
         # mc_human
         left:
@@ -25,8 +29,8 @@ human_1:
         right:
           rotation: [-1.57, 0, 0]
     hand:
-      radius: 0.03
-      length: 0.1
+      # radius: 0.03
+      # length: 0.1
       offset:
         # mc_human
         left:
@@ -42,8 +46,8 @@ human_2:
         #mc_human
         rotation: [0, 0, 0]
     arm:
-      radius: 0.05
-      length: 0.2
+      # radius: 0.05
+      # length: 0.2
       offset:
         # mc_human
         left:
@@ -51,8 +55,8 @@ human_2:
         right:
           rotation: [-1.57, 0, 0]
     forearm:
-      radius: 0.03
-      length: 0.2
+      # radius: 0.03
+      # length: 0.2
       offset:
         # mc_human
         left:
@@ -60,8 +64,8 @@ human_2:
         right:
           rotation: [-1.57, 0, 0]
     hand:
-      radius: 0.03
-      length: 0.1
+      # radius: 0.03
+      # length: 0.1
       offset:
         # mc_human
         left:

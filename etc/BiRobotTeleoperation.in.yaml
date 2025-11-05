@@ -11,7 +11,10 @@ StatesFiles:
 - "@MC_STATES_RUNTIME_INSTALL_PREFIX@/data"
 VerboseStateFactory: false
 
+# mode: SimulationSingle
+# mode: SingleVR
 mode: DualVR
+
 # human or simple_human
 # estimation_module: simple_human
 estimation_module: human
@@ -177,7 +180,7 @@ states:
     states:
     - BiTeleopTask_1
     # - BiTeleopTask_2
-    - Forces
+    # - Forces
     - ChoiceBiTeleop
     delays:
       ChoiceBiTeleop: 0.5
@@ -323,6 +326,8 @@ OpenVRPlugin:
   distantData:
     port: 12338
     ip: 10.4.5.100
+    # max_packet_size: 10
+    verbose: false
 
 
 # Plugins are overridden per-mode by Plugins.yaml
@@ -331,9 +336,11 @@ Plugins: []
 
 
 RobotModelUpdate:
-  pluginName: RobotModelUpdate_human_0_estimated
-RobotModelUpdate2:
   pluginName: RobotModelUpdate_human_1_estimated
+  publishConvex: true
+RobotModelUpdate2:
+  pluginName: RobotModelUpdate_human_2_estimated
+  publishConvex: true
 
 
 # Replay

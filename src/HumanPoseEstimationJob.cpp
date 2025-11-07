@@ -1,8 +1,10 @@
 #include "HumanPoseEstimationJob.h"
 
 HumanPoseEstimationJob::HumanPoseEstimationJob(BiRobotTeleoperation & ctl,
+                                               const mc_rbdyn::Robots & extRobotsCtl,
+                                               const std::string & humanRobotName,
                                                const mc_rtc::Configuration & config,
-                                               const std::string & name)
+                                               const std::string & name) : humanRobot_name_(humanRobotName)
 {
   result.init(name);
   dt_ = ctl.timeStep;
@@ -56,11 +58,13 @@ HumanPoseEstimationJob::HumanPoseEstimationJob(BiRobotTeleoperation & ctl,
     human_indx_ = ctl.getHumanIndx();
   }
 
-  humanRobot_name_ = "human_" + std::to_string(human_indx_ + 1) + "_estimated";
   ext_robots = mc_rbdyn::Robots::make();
-  auto rm = mc_rbdyn::RobotLoader::get_robot_module(estimationModule, humanRobot_name_);
-  // auto rm = mc_rbdyn::RobotLoader::get_robot_module("human", humanRobot_name_);
-  mc_rbdyn::Robot & human = ext_robots->load(humanRobot_name_, *rm);
+  extRobotsCtl.copy(*ext_robots);
+  auto & human = ext_robots->robot(humanRobot_name_);
+  for(const auto & frame : human.frames())
+  {
+    mc_rtc::log::info("Human has frame {}", frame);
+  }
   human.forwardKinematics();
   human.forwardVelocity();
   human.forwardAcceleration();

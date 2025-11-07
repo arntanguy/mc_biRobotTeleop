@@ -9,15 +9,8 @@
 void HumanPoseEstimation::start(mc_control::fsm::Controller & ctl_)
 {
   auto & ctl = static_cast<BiRobotTeleoperation &>(ctl_);
-  job_ = std::make_unique<HumanPoseEstimationJob>(ctl, config_, name());
 
-  if(!job_->startedOnce())
-  {
-    auto & input = job_->input();
-    input.init(ctl, config_, name());
-  }
-
-  const auto & humanRobot_name = job_->humanRobot_name_;
+  const auto humanRobot_name = "human_" + std::to_string(config_("human_indx", 0) + 1) + "_estimated";
 
   // Add an external robot to display the output
   auto rm = mc_rbdyn::RobotLoader::get_robot_module(ctl.config()("estimation_module", std::string{"simple_human"}));
@@ -39,6 +32,15 @@ void HumanPoseEstimation::start(mc_control::fsm::Controller & ctl_)
     ctl.datastore().call("RobotModelUpdate_" + humanRobot_name + "::registerRobot", human,
                          std::function<void()>([this]() { humanScaleUpdated_ = true; }));
   }
+
+  job_ = std::make_unique<HumanPoseEstimationJob>(ctl, *ctl.external_robots_, humanRobot_name, config_, name());
+  if(!job_->startedOnce())
+  {
+    auto & input = job_->input();
+    input.init(ctl, config_, name());
+  }
+
+
 
   // Initialize ros publisher
   mc_rtc::log::info("init robot publisher for {}", "control/" + humanRobot_name);
@@ -87,7 +89,7 @@ bool HumanPoseEstimation::run(mc_control::fsm::Controller & ctl_)
     ctl.updateHumanPose(result.h_estimated_, ctl.getHumanPose(job_->human_indx_, true));
 
     // copy human robot state for display and publishing to external controller
-    auto & threadRobot = job_->ext_robots->robot();
+    auto & threadRobot = job_->ext_robots->robot(job_->humanRobot_name_);
     auto & human = ctl.external_robots_->robot(job_->humanRobot_name_);
     human.mbc() = threadRobot.mbc();
     human.forwardKinematics();

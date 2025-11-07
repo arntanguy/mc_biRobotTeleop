@@ -4,7 +4,8 @@ HumanPoseEstimationJob::HumanPoseEstimationJob(BiRobotTeleoperation & ctl,
                                                const mc_rbdyn::Robots & extRobotsCtl,
                                                const std::string & humanRobotName,
                                                const mc_rtc::Configuration & config,
-                                               const std::string & name) : humanRobot_name_(humanRobotName)
+                                               const std::string & name)
+: humanRobot_name_(humanRobotName)
 {
   result.init(name);
   dt_ = ctl.timeStep;

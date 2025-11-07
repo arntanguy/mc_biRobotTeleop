@@ -78,7 +78,11 @@ struct HumanPoseEstimationJob
   mc_rbdyn::RobotsPtr ext_robots;
   std::string name_;
 
-  HumanPoseEstimationJob(BiRobotTeleoperation & ctl, const mc_rbdyn::Robots & ext_robots, const std::string & humanRobotName, const mc_rtc::Configuration & config, const std::string & name);
+  HumanPoseEstimationJob(BiRobotTeleoperation & ctl,
+                         const mc_rbdyn::Robots & ext_robots,
+                         const std::string & humanRobotName,
+                         const mc_rtc::Configuration & config,
+                         const std::string & name);
 
   /**
    * Update the estimator's robot model using the RobotModelUpdate plugin

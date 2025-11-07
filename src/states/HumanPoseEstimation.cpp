@@ -40,8 +40,6 @@ void HumanPoseEstimation::start(mc_control::fsm::Controller & ctl_)
     input.init(ctl, config_, name());
   }
 
-
-
   // Initialize ros publisher
   mc_rtc::log::info("init robot publisher for {}", "control/" + humanRobot_name);
 

@@ -11,7 +11,8 @@ RobotArm_1:
     rotation: [0., 0., 0.]
   human_robot_TargetTransfo:
     translation: [0., 0., 0.]
-    rotation: [0, 0., 0.]
+    # rotation: [0, 0., 0.] # for simple_human
+    rotation: [-1.57, 0., 3.14] # for human
   variable_stiffness:
     duration_to_full: 2
     duration_at_low: 3
@@ -35,7 +36,8 @@ RobotArm_2:
     rotation: [0., 0., 0.]
   human_robot_TargetTransfo:
     translation: [0., 0., 0.]
-    rotation: [0, 0., 0.]
+    rotation: [-1.57, 0., 0.] # for human
+    # rotation: [0, 0., 0.] # for simple_human
   task:
     type: transform
     unactiveJoints: ["Root", "CHEST_P", "CHEST_Y"]
@@ -59,6 +61,9 @@ RobotForearm_2:
 RobotHand_1:
   base: RobotArm_1
   human_targetLimb: LeftHand
+  human_robot_TargetTransfo:
+    # rotation: [0, 0., 0.] # for simple_human
+    rotation: [1.57, 0., 0] # for human
   task:
     frame: LeftHand
 

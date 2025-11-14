@@ -46,3 +46,7 @@ UDP:
   port: 4444
   IgnoredJoints:
     joints: [R_HAND_J0, R_HAND_J1, L_HAND_J1, L_HAND_J0]
+
+OpenVRPlugin:
+  distantData:
+    local_port: 33333

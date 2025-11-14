@@ -42,3 +42,7 @@ human_sim:
 UDP:
   host: rhps1
   port: 4444
+
+OpenVRPlugin:
+  distantData:
+    local_port: 33334

@@ -10,7 +10,7 @@ Timestep: 0.005
 GUIServer:
   # Enable: false
   IPC:
-    Socket: /tmp/mc_rtc2
+    Socket: /tmp/mc_rtc
   TCP:
     # Binding host, * binds to all interfaces
     Host: "*"
@@ -26,7 +26,7 @@ server:
   pub_port: 4243
 
 distant_controller:
-  ip: 10.4.5.42 #host address of the distant controller
+  ip: 10.4.5.100 #host address of the distant controller
   sub_port: 4346   #should be the pub port of the distant server
   pub_port: 4245
   human_name: human_1 #or human_1
@@ -40,3 +40,9 @@ human_sim:
   ip: localhost #host address of the simulated human controller
   sub_port: 4545
   pub_port: 4646
+
+UDP:
+  host: hrp4005c
+  port: 4444
+  IgnoredJoints:
+    joints: [R_HAND_J0, R_HAND_J1, L_HAND_J1, L_HAND_J0]

@@ -5,7 +5,7 @@ MainRobot:
 Enabled: BiRobotTeleoperation
 Log: false
 
-Timestep: 0.005
+Timestep: 0.002
 
 GUIServer:
   IPC:
@@ -38,3 +38,7 @@ human_sim:
   ip: localhost #host address of the simulated human controller
   sub_port: 4242
   pub_port: 4343
+
+UDP:
+  host: rhps1
+  port: 4444

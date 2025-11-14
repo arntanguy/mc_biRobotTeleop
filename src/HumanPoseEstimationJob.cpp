@@ -127,6 +127,15 @@ HumanPoseEstimationResult HumanPoseEstimationJob::computeJob()
   human.forwardVelocity();
   human.forwardAcceleration();
 
+  // put feet on the floor
+  auto posW = human.posW();
+  auto X_0_LeftFoot = human.frame("LeftSole").position();
+  auto X_0_RightFoot = human.frame("RightSole").position();
+  auto X_0_FootMid = sva::interpolate(X_0_LeftFoot, X_0_RightFoot, 0.5); // mid point between both feet
+  // move floating base down such that the midpoint between feet is on the floor
+  posW.translation().z() -= X_0_FootMid.translation().z();
+  human.posW(posW);
+
   // Set result
   for(int i = 0; i <= biRobotTeleop::Limbs::RightArm; i++)
   {

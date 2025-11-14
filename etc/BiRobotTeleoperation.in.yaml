@@ -82,8 +82,8 @@ collisions_with_joint_selection:
       R_SHOULDER_Y_LINK, R_ELBOW_P_LINK, R_WRIST_Y_LINK, r_wrist, R_WRIST_P_LINK, L_HIP_P_LINK, R_HIP_P_LINK,
       R_KNEE_P_LINK, L_KNEE_P_LINK]
     cstr_sets:
-    - b1: [L_SHOULDER_Y_LINK, L_ELBOW_P_LINK, l_wrist]
-      b2: [L_HIP_P_LINK, L_HIP_Y_LINK, body, torso]
+    - b1: [L_SHOULDER_Y_LINK, L_ELBOW_P_LINK, L_WRIST_Y_LINK, l_wrist]
+      b2: [L_HIP_P_LINK, L_HIP_Y_LINK, body, torso, NECT_P_LINK]
       joints: [L_SHOULDER_P, L_SHOULDER_R, L_SHOULDER_Y, L_ELBOW_P, L_WRIST_Y, L_WRIST_R, L_WRIST_P]
     - b1: [R_SHOULDER_Y_LINK, R_ELBOW_P_LINK, r_wrist]
       b2: [R_HIP_P_LINK, L_HIP_Y_LINK, body, torso]

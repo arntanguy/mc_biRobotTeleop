@@ -62,10 +62,6 @@ HumanPoseEstimationJob::HumanPoseEstimationJob(BiRobotTeleoperation & ctl,
   ext_robots = mc_rbdyn::Robots::make();
   extRobotsCtl.copy(*ext_robots);
   auto & human = ext_robots->robot(humanRobot_name_);
-  for(const auto & frame : human.frames())
-  {
-    mc_rtc::log::info("Human has frame {}", frame);
-  }
   human.forwardKinematics();
   human.forwardVelocity();
   human.forwardAcceleration();

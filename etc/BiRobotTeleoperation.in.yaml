@@ -339,50 +339,9 @@ Plugins: []
 
 RobotModelUpdate:
   pluginName: RobotModelUpdate_human_1_estimated
-  publishConvex: true
-  # frames: &extra-frames
-  #   - name: LArmLink_generalized
-  #     parent: LArmLink
-  #     X_p_f:
-  #       rotation: [1.57, 0, 0]
-  #   - name: LForearmLink_generalized
-  #     parent: LForearmLink
-  #     X_p_f:
-  #       rotation: [1.57, 0, 0]
-  #   - name: LHandLink_generalized
-  #     parent: LHandLink
-  #     X_p_f:
-  #       rotation: [1.57, 0, 0]
-  #   - name: RArmLink_generalized
-  #     parent: RArmLink
-  #     X_p_f:
-  #       rotation: [-1.57, 0, 0]
-  #   - name: RForearmLink_generalized
-  #     parent: RForearmLink
-  #     X_p_f:
-  #       rotation: [-1.57, 0, 0]
-  #   - name: RHandLink_generalized
-  #     parent: RHandLink
-  #     X_p_f:
-  #       rotation: [-1.57, 0, 0]
-  #   - name: HeadLink_generalized
-  #     parent: HeadLink
-  #     X_p_f:
-  #       rotation: [-1.57, 0, 0]
-  #   - name: TorsoLink_generalized
-  #     parent: TorsoLink
-  #     X_p_f:
-  #       rotation: [-1.57, 0, 0]
-  #   - name: HipsLink_generalized
-  #     parent: HipsLink
-  #     X_p_f:
-  #       rotation: [-1.57, 0, 0]
+  publishVisual: true
+  publishConvex: false
 RobotModelUpdate2:
   pluginName: RobotModelUpdate_human_2_estimated
-  publishConvex: true
-  # frames: *extra-frames
-
-
-# Replay
-# UDPPlugin
-# OpenVRPlugin
+  publishVisual: true
+  publishConvex: false

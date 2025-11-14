@@ -142,6 +142,14 @@ void BiRobotTeleoperation::init_()
   // config_.load(mc_rtc::Configuration(BiRobotTask_CONFIG_PATH));
 
   external_robots_ = mc_rbdyn::Robots::make();
+  // FIXME! the storage insde Robots depends on std::vector storage for robot modules, mbgs, mbcs etc
+  // However we return references to this underlying storage.
+  // Thus dynamically adding a new robot can cause reallocation, and thus invalidate those references
+  //
+  // In our case here, adding robots in HumanPoseEstmation will cause a crash in the RobotModuleUpdate plugin when
+  // adding Visual shapes from the robot module to the gui (since robot.module() returns a reference to robot modules
+  // stored in an std::vector within Robots.
+  external_robots_->reserve(10);
 
   // const auto robot_2_indx = robots().robot("robot_2").robotIndex();
   // mc_solver::CollisionsConstraint robot_2_collision_cstr(robots(),robot_2_indx,robot_2_indx,dt);

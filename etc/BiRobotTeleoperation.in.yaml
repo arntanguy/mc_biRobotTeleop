@@ -59,16 +59,16 @@ collisions_with_joint_selection:
     sDist: 0.005
     simplified_all_bodies: [BODY, HEAD_P_LINK, CHEST_Y_LINK, L_SHOULDER_P_LINK, L_SHOULDER_R_LINK, L_SHOULDER_Y_LINK,
       L_ELBOW_P_LINK, L_WRIST_Y_LINK, L_WRIST_R_LINK, R_SHOULDER_P_LINK, R_SHOULDER_R_LINK, R_SHOULDER_Y_LINK,
-      R_ELBOW_P_LINK, R_WRIST_Y_LINK, R_WRIST_R_LINK, R_CROTCH_P_LINK, L_CROTCH_P_LINK, R_CROTCH_P_LINK,
+      R_ELBOW_Y_LINK, R_WRIST_Y_LINK, R_WRIST_R_LINK, R_CROTCH_P_LINK, L_CROTCH_P_LINK, R_CROTCH_P_LINK,
       R_KNEE_P_LINK, L_KNEE_P_LINK]
     cstr_sets:
     - b1: [L_SHOULDER_Y_LINK, L_ELBOW_P_LINK]
       b2: [R_CROTCH_P_LINK, L_CROTCH_Y_LINK, BODY, HEAD_P_LINK, CHEST_P_LINK]
       joints: [L_SHOULDER_P, L_SHOULDER_R, L_SHOULDER_Y, L_ELBOW_P, L_WRIST_Y, L_WRIST_R]
-    - b1: [R_SHOULDER_Y_LINK, R_ELBOW_P_LINK]
+    - b1: [R_SHOULDER_Y_LINK, R_ELBOW_Y_LINK, R_WRIST_Y_LINK]
       b2: [R_CROTCH_P_LINK, L_CROTCH_Y_LINK, BODY, HEAD_P_LINK, CHEST_P_LINK]
       joints: [R_SHOULDER_P, R_SHOULDER_R, R_SHOULDER_Y, R_ELBOW_P, R_WRIST_Y, R_WRIST_R]
-    - b1: [R_ELBOW_P_LINK]
+    - b1: [R_ELBOW_Y_LINK]
       b2: [L_ELBOW_P_LINK]
       joints: [R_SHOULDER_P, R_SHOULDER_R, R_SHOULDER_Y, R_ELBOW_P, R_WRIST_Y, R_WRIST_R]
     - b1: [L_CROTCH_P_LINK]
@@ -179,7 +179,7 @@ states:
     base: Parallel
     states:
     - BiTeleopTask_1
-    # - BiTeleopTask_2
+    - BiTeleopTask_2
     # - Forces
     - ChoiceBiTeleop
     delays:
@@ -304,7 +304,9 @@ UDPPlugin:
       port: 4444
       ignoredJoints:
         joints: [R_HAND_J0, R_HAND_J1, L_HAND_J1, L_HAND_J0]
-
+    robot_2:
+      host: rhps1
+      port: 4444
 
 OpenVRPlugin:
   deviceMap: #[name ; ID]
@@ -340,7 +342,7 @@ RobotModelUpdate:
   publishConvex: true
   # frames: &extra-frames
   #   - name: LArmLink_generalized
-  #     parent: LArmLink  
+  #     parent: LArmLink
   #     X_p_f:
   #       rotation: [1.57, 0, 0]
   #   - name: LForearmLink_generalized
@@ -348,11 +350,11 @@ RobotModelUpdate:
   #     X_p_f:
   #       rotation: [1.57, 0, 0]
   #   - name: LHandLink_generalized
-  #     parent: LHandLink  
+  #     parent: LHandLink
   #     X_p_f:
   #       rotation: [1.57, 0, 0]
   #   - name: RArmLink_generalized
-  #     parent: RArmLink  
+  #     parent: RArmLink
   #     X_p_f:
   #       rotation: [-1.57, 0, 0]
   #   - name: RForearmLink_generalized
@@ -360,15 +362,15 @@ RobotModelUpdate:
   #     X_p_f:
   #       rotation: [-1.57, 0, 0]
   #   - name: RHandLink_generalized
-  #     parent: RHandLink  
+  #     parent: RHandLink
   #     X_p_f:
   #       rotation: [-1.57, 0, 0]
   #   - name: HeadLink_generalized
-  #     parent: HeadLink  
+  #     parent: HeadLink
   #     X_p_f:
   #       rotation: [-1.57, 0, 0]
   #   - name: TorsoLink_generalized
-  #     parent: TorsoLink  
+  #     parent: TorsoLink
   #     X_p_f:
   #       rotation: [-1.57, 0, 0]
   #   - name: HipsLink_generalized

@@ -11,9 +11,9 @@ StatesFiles:
 - "@MC_STATES_RUNTIME_INSTALL_PREFIX@/data"
 VerboseStateFactory: false
 
-# mode: SimulationSingle
+mode: SimulationSingle
 # mode: SingleVR
-mode: DualVR
+# mode: DualVR
 
 # human or simple_human
 # estimation_module: simple_human
@@ -24,7 +24,7 @@ robots:
   ground:
     module: env/ground
   robot_1:
-    module: HRP4::ImpactGrippers
+    module: HRP2DRCSS
   robot_2:
     module: RHPS1_forceshoe_forceshoe_lirmm_lirmm
 
@@ -59,7 +59,7 @@ collisions_with_joint_selection:
     sDist: 0.005
     simplified_all_bodies: [BODY, HEAD_P_LINK, CHEST_Y_LINK, L_SHOULDER_P_LINK, L_SHOULDER_R_LINK, L_SHOULDER_Y_LINK,
       L_ELBOW_P_LINK, L_WRIST_Y_LINK, L_WRIST_R_LINK, R_SHOULDER_P_LINK, R_SHOULDER_R_LINK, R_SHOULDER_Y_LINK,
-      R_ELBOW_Y_LINK, R_WRIST_Y_LINK, R_WRIST_R_LINK, R_CROTCH_P_LINK, L_CROTCH_P_LINK, R_CROTCH_P_LINK,
+      R_ELBOW_Y_LINK, R_WRIST_Y_LINK, R_WRIST_R_LINK, R_CROTCH_P_LINK, L_CROTCH_P_LINK,
       R_KNEE_P_LINK, L_KNEE_P_LINK]
     cstr_sets:
     - b1: [L_SHOULDER_Y_LINK, L_ELBOW_P_LINK]
@@ -83,7 +83,7 @@ collisions_with_joint_selection:
       R_KNEE_P_LINK, L_KNEE_P_LINK]
     cstr_sets:
     - b1: [L_SHOULDER_Y_LINK, L_ELBOW_P_LINK, L_WRIST_Y_LINK, l_wrist]
-      b2: [L_HIP_P_LINK, L_HIP_Y_LINK, body, torso, NECT_P_LINK]
+      b2: [L_HIP_P_LINK, L_HIP_Y_LINK, body, torso, NECK_P_LINK]
       joints: [L_SHOULDER_P, L_SHOULDER_R, L_SHOULDER_Y, L_ELBOW_P, L_WRIST_Y, L_WRIST_R, L_WRIST_P]
     - b1: [R_SHOULDER_Y_LINK, R_ELBOW_P_LINK, r_wrist]
       b2: [R_HIP_P_LINK, L_HIP_Y_LINK, body, torso]
@@ -93,6 +93,28 @@ collisions_with_joint_selection:
       joints: [R_SHOULDER_P, R_SHOULDER_R, R_SHOULDER_Y, R_ELBOW_P, R_WRIST_Y, R_WRIST_R, R_WRIST_P]
     - b1: [L_HIP_P_LINK]
       b2: [R_HIP_P_LINK]
+      joints: []
+  hrp2_drc:
+    iDist: 0.02
+    sDist: 0.005
+    #maybe add head link 0 (le cou)
+    simplified_all_bodies: [BODY, HEAD_LINK1, CHEST_LINK1,              LARM_LINK1, LARM_LINK0, LARM_LINK2,  #shoulder links
+      LARM_LINK3, LARM_LINK4, LARM_LINK5, LARM_LINK6, #elbow and 3 wrists
+      RARM_LINK1, RARM_LINK0,
+      RARM_LINK2, RARM_LINK3, RARM_LINK4, RARM_LINK6, R_WRIST_P_LINK, RARM_LINK5, LLEG_LINK0 , RLEG_LINK0,
+      RLEG_LINK2, LLEG_LINK2]
+    cstr_sets:
+    - b1: [LARM_LINK2, LARM_LINK3, LARM_LINK4, LARM_LINK6]
+      b2: [LLEG_LINK2, LLEG_LINK0, BODY, CHEST_LINK1, HEAD_LINK1]
+      joints: [LARM_JOINT0, LARM_JOINT1, LARM_JOINT2, LARM_JOINT3, LARM_JOINT4, LARM_JOINT5, LARM_JOINT6]
+    - b1: [RARM_LINK2, RARM_LINK3, RARM_LINK6]
+      b2: [RLEG_LINK2, LLEG_LINK0, BODY, CHEST_LINK1]
+      joints: [RARM_JOINT0, RARM_JOINT1, RARM_JOINT2, RARM_JOINT3, RARM_JOINT4, RARM_JOINT5, RARM_JOINT6]
+    - b1: [RARM_LINK3, RARM_LINK6]
+      b2: [LARM_LINK3, LARM_LINK6]
+      joints: [RARM_JOINT0, RARM_JOINT1, RARM_JOINT2, RARM_JOINT3, RARM_JOINT4, RARM_JOINT5, RARM_JOINT6]
+    - b1: [LLEG_LINK2]
+      b2: [RLEG_LINK2]
       joints: []
 
 contacts:

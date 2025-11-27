@@ -34,3 +34,20 @@ robot_limb_map:
       name: "BODY"
     head:
       name: "HEAD_P_LINK"
+  hrp2_drc:
+    left_hand:
+      name: "LARM_LINK6"
+    right_hand:
+      name: "RARM_LINK6"
+    left_arm:
+      name: "LARM_LINK2"
+    right_arm:
+      name: "RARM_LINK2"
+    left_forearm:
+      name: "LARM_LINK3"
+    right_forearm:
+      name: "RARM_LINK3"
+    pelvis:
+      name: "BODY"
+    head:
+      name: "HEAD_LINK1"

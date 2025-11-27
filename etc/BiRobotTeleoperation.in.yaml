@@ -24,8 +24,13 @@ robots:
   ground:
     module: env/ground
   robot_1:
+<<<<<<< HEAD
     module: HRP2DRCSS
   robot_2:
+=======
+    module: HRP2DRC #HRP4::ImpactGrippers
+  robot_2: 
+>>>>>>> d15ea2e (Added links for hrp2)
     module: RHPS1_forceshoe_forceshoe_lirmm_lirmm
 
 # General constraints, always on

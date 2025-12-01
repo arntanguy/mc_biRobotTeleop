@@ -46,8 +46,9 @@ Human_2_HandTrajTasks:
         #   controlPoints: [[0,0.8,0]]
       targetFrame:
         robot: robot_1
-        frame: l_wrist
-        translation: [0., 0., 0.]
+        # frame: l_wrist  
+        frame: LARM_LINK6  #for hrp2
+        translation: [0., 0.1, -0.15]
         rotation: [-1.57, 0, 0]
         controlPoints: [[0, 0.8, 0]]
       stiffness: 100

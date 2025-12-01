@@ -19,7 +19,8 @@ RobotArm_1:
     low: 1
   task:
     type: transform
-    unactiveJoints: ["Root", "CHEST_P", "CHEST_Y"]
+    unactiveJoints: ["Root", "CHEST_JOINT0", "CHEST_JOINT1"] #for hrp2
+    # unactiveJoints: ["Root", "CHEST_P", "CHEST_Y"]
     frame: LeftArm
     dimWeight: [1, 1, 1, 0, 0, 0]
     weight: 200

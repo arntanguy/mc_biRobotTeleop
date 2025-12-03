@@ -107,7 +107,7 @@ HumanPoseData_human_2:
   human_indx: 1
   human_devices: [["RightHand_human_2", "RightHand"], ["RightArm_human_2", "RightArm"], ["Pelvis_human_2",
       "Pelvis"]]                                                                                                      #Devices names on human [device, limb]
-  robot_device: "Robot_HRP4" #Device name attached to the robot
+  robot_device: "Robot_2" #Device name attached to the robot
   robot_link: Head #Robot link on which the device is attached
   link_sensor_transfo: #Transfo from link frame to sensor frame
     robot_1:

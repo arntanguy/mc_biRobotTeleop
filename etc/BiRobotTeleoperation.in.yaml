@@ -11,9 +11,9 @@ StatesFiles:
 - "@MC_STATES_RUNTIME_INSTALL_PREFIX@/data"
 VerboseStateFactory: false
 
-mode: SimulationSingle
-# mode: SingleVR
-# # mode: DualVR
+# mode: SimulationSingle
+mode: SingleVR
+# mode: DualVR
 
 # human or simple_human
 # estimation_module: simple_human
@@ -24,9 +24,10 @@ robots:
   ground:
     module: env/ground
   robot_1:
-    module: HRP2DRC #HRP4::ImpactGrippers
+    # module: HRP4::ImpactGrippers
+    module: HRP2DRC
   robot_2: 
-    module: RHPS1_forceshoe_forceshoe_lirmm_lirmm
+    module: RHPS1  #_forceshoe_forceshoe_lirmm_lirmm
 
 # General constraints, always on
 constraints:
@@ -62,14 +63,14 @@ collisions_with_joint_selection:
       R_ELBOW_Y_LINK, R_WRIST_Y_LINK, R_WRIST_R_LINK, R_CROTCH_P_LINK, L_CROTCH_P_LINK,
       R_KNEE_P_LINK, L_KNEE_P_LINK]
     cstr_sets:
-    - b1: [L_SHOULDER_Y_LINK, L_ELBOW_P_LINK]
+    - b1: [L_SHOULDER_Y_LINK, L_ELBOW_Y_LINK]
       b2: [R_CROTCH_P_LINK, L_CROTCH_Y_LINK, BODY, HEAD_P_LINK, CHEST_P_LINK]
       joints: [L_SHOULDER_P, L_SHOULDER_R, L_SHOULDER_Y, L_ELBOW_P, L_WRIST_Y, L_WRIST_R]
     - b1: [R_SHOULDER_Y_LINK, R_ELBOW_Y_LINK, R_WRIST_Y_LINK]
       b2: [R_CROTCH_P_LINK, L_CROTCH_Y_LINK, BODY, HEAD_P_LINK, CHEST_P_LINK]
       joints: [R_SHOULDER_P, R_SHOULDER_R, R_SHOULDER_Y, R_ELBOW_P, R_WRIST_Y, R_WRIST_R]
     - b1: [R_ELBOW_Y_LINK]
-      b2: [L_ELBOW_P_LINK]
+      b2: [L_ELBOW_Y_LINK]
       joints: [R_SHOULDER_P, R_SHOULDER_R, R_SHOULDER_Y, R_ELBOW_P, R_WRIST_Y, R_WRIST_R]
     - b1: [L_CROTCH_P_LINK]
       b2: [R_CROTCH_P_LINK]
@@ -98,15 +99,19 @@ collisions_with_joint_selection:
     iDist: 0.02
     sDist: 0.005
     #maybe add head link 0 (le cou)
-    simplified_all_bodies: [BODY, HEAD_LINK1, CHEST_LINK1,              LARM_LINK1, LARM_LINK0, LARM_LINK2,  #shoulder links
+    simplified_all_bodies: [BODY, HEAD_LINK1, CHEST_LINK1, LARM_LINK1, LARM_LINK0, LARM_LINK2,  #shoulder links
       LARM_LINK3, LARM_LINK4, LARM_LINK5, LARM_LINK6, #elbow and 3 wrists
       RARM_LINK1, RARM_LINK0,
       RARM_LINK2, RARM_LINK3, RARM_LINK4, RARM_LINK6, R_WRIST_P_LINK, RARM_LINK5, LLEG_LINK0 , RLEG_LINK0,
       RLEG_LINK2, LLEG_LINK2]
     cstr_sets:
-    - b1: [LARM_LINK2, LARM_LINK3, LARM_LINK4, LARM_LINK6]
+    - b1: [LARM_LINK2, LARM_LINK3, LARM_LINK4, LARM_LINK6,LHAND_LINK2, LHAND_LINK4, LHAND_LINK3]
       b2: [LLEG_LINK2, LLEG_LINK0, BODY, CHEST_LINK1, HEAD_LINK1]
       joints: [LARM_JOINT0, LARM_JOINT1, LARM_JOINT2, LARM_JOINT3, LARM_JOINT4, LARM_JOINT5, LARM_JOINT6]
+
+    - b1: [LHAND_LINK2, LHAND_LINK4, LHAND_LINK3]
+      b2: [LARM_LINK1, LARM_LINK0]
+      joints: [LARM_JOINT0, LARM_JOINT1, LARM_JOINT2, LARM_JOINT3, LARM_JOINT4, LARM_JOINT5, LARM_JOINT6, LHAND_JOINT1, LHAND_JOINT2, LHAND_JOINT3, LHAND_JOINT4, LHAND_JOINT5]
     - b1: [RARM_LINK2, RARM_LINK3, RARM_LINK6]
       b2: [RLEG_LINK2, LLEG_LINK0, BODY, CHEST_LINK1]
       joints: [RARM_JOINT0, RARM_JOINT1, RARM_JOINT2, RARM_JOINT3, RARM_JOINT4, RARM_JOINT5, RARM_JOINT6]
@@ -332,24 +337,38 @@ UDPPlugin:
 
 OpenVRPlugin:
   deviceMap: #[name ; ID]
-  - ["RightArm_human_2", "LHR-9F12939E"]
-  - ["RightHand_human_2", "LHR-A9EEA216"]
-  - ["LeftArm_human_1", "LHR-A108F2F9"]
-  - ["LeftHand_human_1", "LHR-A469DE6D"]
-  - ["Pelvis_human_2", "LHR-E488461D"]
-  - ["base station", "LHB-9D7575BD"]
-  - ["base station 2", "LHB-49EE85A8"]
-  - ["Head", "LHR-AF7F4782"]
-  - ["Robot_HRP4", "LHR-659508D3"]
-  - ["Robot_RHPS1", "LHR-D756B287"]
-  - ["Pelvis_human_1", "LHR-66106DA7"]
+
+  ## for LIRMM
+  # - ["RightArm_human_2", "LHR-9F12939E"]
+  # - ["RightHand_human_2", "LHR-A9EEA216"]
+  # - ["LeftArm_human_1", "LHR-A108F2F9"]
+  # - ["LeftHand_human_1", "LHR-A469DE6D"]
+  # - ["Pelvis_human_2", "LHR-E488461D"]
+  # - ["base station", "LHB-9D7575BD"]
+  # - ["base station 2", "LHB-49EE85A8"]
+  # - ["Head", "LHR-AF7F4782"]
+  # - ["Robot_HRP4", "LHR-659508D3"]
+  # - ["Robot_RHPS1", "LHR-D756B287"]
+  # - ["Pelvis_human_1", "LHR-66106DA7"]
+
+
+  - ["RightArm_human_2", "LHR-5866134B"]
+  - ["RightHand_human_2", "LHR-DC90393E"]
+  - ["Pelvis_human_2", "LHR-58687408"]
+  - ["Robot_2", "LHR-D59475BF"]
+
+  # - ["LeftArm_human_1", "LHR-5866134B"]
+  # - ["LeftHand_human_1", "LHR-DC90393E"]
+  # - ["Robot_RHPS1", "LHR-D59475BF"]
+  # - ["Pelvis_human_1", "LHR-58687408"]
+
 
   sleep: 10 #ms
 
   localData: false
   distantData:
     port: 12338
-    ip: 10.4.5.100
+    ip: 192.168.244.0
     # max_packet_size: 10
     verbose: false
 

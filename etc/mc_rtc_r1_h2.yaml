@@ -1,7 +1,8 @@
 ---
 MainRobot:
   name: robot_1 # for robot_1
-  module: HRP2DRC # HRP4::ImpactGrippers # desired robot module
+  module: HRP2DRC # desired robot module
+  # module: HRP4::ImpactGrippers
 Enabled: BiRobotTeleoperation
 Log: false
 

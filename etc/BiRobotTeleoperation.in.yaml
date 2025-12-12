@@ -12,8 +12,8 @@ StatesFiles:
 VerboseStateFactory: false
 
 # mode: SimulationSingle
-mode: SingleVR
-# mode: DualVR
+# mode: SingleVR
+mode: DualVR
 
 # human or simple_human
 # estimation_module: simple_human
@@ -27,7 +27,7 @@ robots:
     # module: HRP4::ImpactGrippers
     module: HRP2DRC
   robot_2: 
-    module: RHPS1  #_forceshoe_forceshoe_lirmm_lirmm
+    module: RHPS1_sake2_sake2  #_forceshoe_forceshoe_lirmm_lirmm
 
 # General constraints, always on
 constraints:
@@ -359,12 +359,13 @@ OpenVRPlugin:
   - ["RightArm_human_2", "LHR-5866134B"]
   - ["RightHand_human_2", "LHR-DC90393E"]
   - ["Pelvis_human_2", "LHR-58687408"]
-  - ["Robot_2", "LHR-D59475BF"]
+  - ["Robot_2", "LHR-D59475BF"]  # this one is placed on hrp2's head
 
-  # - ["LeftArm_human_1", "LHR-5866134B"]
-  # - ["LeftHand_human_1", "LHR-DC90393E"]
+  - ["LeftArm_human_1", "LHR-4D18CA04"]
+  - ["LeftHand_human_1", "LHR-61340B59"]
+  - ["Robot_RHPS1", "LHR-DC3B16AC"]
   # - ["Robot_RHPS1", "LHR-D59475BF"]
-  # - ["Pelvis_human_1", "LHR-58687408"]
+  - ["Pelvis_human_1", "LHR-1115D9EA"]
 
 
   sleep: 10 #ms
@@ -372,7 +373,7 @@ OpenVRPlugin:
   localData: false
   distantData:
     port: 12338
-    ip: 192.168.244.0
+    ip: 150.18.226.6
     # max_packet_size: 10
     verbose: false
 

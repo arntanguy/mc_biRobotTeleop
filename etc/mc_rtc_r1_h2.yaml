@@ -11,7 +11,7 @@ Timestep: 0.005
 GUIServer:
   # Enable: false
   IPC:
-    Socket: /tmp/mc_rtc
+    Socket: /tmp/mc_rtc3
   TCP:
     # Binding host, * binds to all interfaces
     Host: "*"
@@ -27,7 +27,8 @@ server:
   pub_port: 4243
 
 distant_controller:
-  ip: 10.4.5.100 #host address of the distant controller
+  # ip: 150.18.226.5 #host address of the distant controller
+  ip: 192.168.243.57
   sub_port: 4346   #should be the pub port of the distant server
   pub_port: 4245
   human_name: human_1 #or human_1

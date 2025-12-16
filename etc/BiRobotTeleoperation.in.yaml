@@ -373,7 +373,9 @@ OpenVRPlugin:
   localData: false
   distantData:
     port: 12338
-    ip: 150.18.226.6
+    # ip: 150.18.226.6 
+    ip: 192.168.243.57
+    
     # max_packet_size: 10
     verbose: false
 
@@ -388,10 +390,10 @@ RobotModelUpdate:
   publishVisual: true
   publishConvex: false
   defaultConfig:
-    human: Arnaud
+    human: Alice
 RobotModelUpdate2:
   pluginName: RobotModelUpdate_human_2_estimated
   publishVisual: true
   publishConvex: false
   defaultConfig:
-    human: Alice
+    human:  Arnaud

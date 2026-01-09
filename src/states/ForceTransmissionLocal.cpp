@@ -6,6 +6,7 @@
 #include <sch/S_Object/S_Cylinder.h>
 #include <sch/S_Object/S_Sphere.h>
 
+
 void ForceTransmissionLocal::configure(const mc_rtc::Configuration & config)
 {
 
@@ -14,6 +15,43 @@ void ForceTransmissionLocal::configure(const mc_rtc::Configuration & config)
   config("distance_activation_threshold", distance_activation_threshold_);
 
   config("deactivation_threshold", deactivation_threshold_);
+
+  if(config.has("gains"))
+  {
+    gains_ = config("gains");
+  }
+  if(config.has("wrench"))
+  {
+    targetWrench(config("wrench"));
+  }
+  if(config.has("cutoffPeriod"))
+  {
+    cutoffPeriod(config("cutoffPeriod"));
+  }
+
+  robot_ = config("robot", robots.robot(rIndex).name());
+
+  if(config.has("exportValue"))
+  {
+    auto exportValueConfig = config("exportValue");
+    if(exportValueConfig.has("exportContactWrench"))
+    {
+      exportValueConfig("exportContactWrench", exportContactWrench_);
+    }
+    if(exportValueConfig.has("exportExternalWrench"))
+    {
+      exportValueConfig("exportExternalWrench", exportExternalWrench_);
+    }
+    if(exportValueConfig.has("usingWrench"))
+    {
+      exportValueConfig("usingWrench", usingWrench_);
+      mc_rtc::log::info("[ForceTransmissionLocal] usingWrench_: {}", usingWrench_);
+    }
+  }
+  else
+  {
+    mc_rtc::log::error("[ForceTransmissionLocal] No exportValue is specified in the config file");
+  }
 }
 
 void ForceTransmissionLocal::start(mc_control::fsm::Controller & ctl_)
@@ -24,6 +62,9 @@ void ForceTransmissionLocal::start(mc_control::fsm::Controller & ctl_)
 
   config_("robot_1")("force_sensor_limbs", force_sensor_limbs_robot_1_);
   config_("robot_2")("force_sensor_limbs", force_sensor_limbs_robot_2_);
+
+  human_1_estimated = ctl.external_robots_->robot("human_1_estimated");
+  human_2_estimated = ctl.external_robots_->robot("human_2_estimated");
 
   for(int _ = 0; _ < force_sensor_limbs_robot_1_.size(); _++)
   {
@@ -59,14 +100,14 @@ bool ForceTransmissionLocal::run(mc_control::fsm::Controller & ctl_)
 
   if(active_force_measurement_ != nullptr) // filtered wrench value on robot A's limb (limb_a_)
   {
-    double d_b = getContactDistance(ctl_, indx_, limb_a_, limb_b_).norm();  // robot A human B
-    double d_a = getContactDistance(ctl_, indx_ == 1 ? 2 : 1, limb_b_, limb_a_).norm(); //robot B human A
+    double d_b = getContactDistance(ctl_, indx_, limb_a_, limb_b_).norm(); // robot A human B
+    double d_a = getContactDistance(ctl_, indx_ == 1 ? 2 : 1, limb_b_, limb_a_).norm(); // robot B human A
 
     active_force_measurement_->update(task_a_->frame().wrench()); // adds new measurement to the lowpass vector
 
     // if((active_force_measurement_->eval().vector().norm() < force_activation_threshold_ ||
     //     d_a > deactivation_threshold_) && !activation_enforced_)
-    if((d_a > deactivation_threshold_) && !activation_enforced_)// activation enforced jsp trop ce quil fout la
+    if((d_a > deactivation_threshold_) && !activation_enforced_) // activation enforced jsp trop ce quil fout la
     {
       mc_rtc::log::info("[{}] Contact has been broken deactivate force control\nd_a {} d_b {}", name(), d_a, d_b);
       auto & frame = task_b_->frame();
@@ -88,7 +129,6 @@ bool ForceTransmissionLocal::run(mc_control::fsm::Controller & ctl_)
   const biRobotTeleop::HumanPose & h_b = ctl.getHumanPose((indx_ == 1) ? 1 : 0);
   const biRobotTeleop::HumanPose & h_a = ctl.getHumanPose((indx_ == 1) ? 0 : 1);
 
-
   /// A REVOIR
   const sva::PTransformd X_f_contactF_a =
       h_b.getOffset(limb_b_) * h_b.getPose(limb_b_) * task_a_->frame().position().inv();
@@ -102,7 +142,10 @@ bool ForceTransmissionLocal::run(mc_control::fsm::Controller & ctl_)
     {
       auto indx = ctl.robot(robot_a_name_).data()->forceSensorsIndex["LeftHandForceSensor"];
       // minus between frame and fs
-      ctl.robot(robot_a_name_).data()->forceSensors[indx].wrench(sva::ForceVecd(Eigen::Vector3d::Zero(), Eigen::Vector3d{0, 0, 20}));
+      ctl.robot(robot_a_name_)
+          .data()
+          ->forceSensors[indx]
+          .wrench(sva::ForceVecd(Eigen::Vector3d::Zero(), Eigen::Vector3d{0, 0, 20}));
     }
   }
 
@@ -123,7 +166,20 @@ bool ForceTransmissionLocal::run(mc_control::fsm::Controller & ctl_)
     const auto R_fb_limb_a = sva::PTransformd(h_a.getOffset(limb_a_) * h_a.getPose(limb_a_).rotation())
                              * sva::PTransformd(X_0_fb.rotation()).inv();
     const auto X_0_frame = task_b_->frame().position();
+
     const auto wrench_fb = ctl.getCalibratedExtWrench(ctl.realRobot(robot_b_name_));
+
+    if(controller_->datastore().has(robot_b_name_ + "::estimatedExternalWrench_Force")
+            && controller_->datastore().has(robot_b_name_ + "::estimatedExternalWrench_Torque"))
+            {
+            estimatedExternalWrench_centroid_.force() =
+                controller_->datastore().get<Eigen::Vector3d>(robot_b_name_ + "::estimatedExternalWrench_Force");
+            estimatedExternalWrench_centroid_.couple() =
+                controller_->datastore().get<Eigen::Vector3d>(robot_b_name_ + "::estimatedExternalWrench_Torque");
+                wrench_fb = estimatedExternalWrench_centroid_;
+            }
+
+
 
     measured_wrench_b =
         (X_f_contactF_b.inv() * R_fb_limb_a).dualMul(sva::ForceVecd(Eigen::Vector3d::Zero(), wrench_fb.force()));
@@ -136,6 +192,9 @@ bool ForceTransmissionLocal::run(mc_control::fsm::Controller & ctl_)
 
     const auto fs_indx = robot_b.data()->forceSensorsIndex.at(robot_b_custom_force_sensor_name_);
     robot_b.data()->forceSensors[fs_indx].wrench(measured_wrench_b);
+
+
+    // ctl_.robots().robot(robot_name).frame(f).wrench(); // this is where i am getting the wrench for now
 
     // task_b_->setMeasuredWrench(measured_wrench_b);
   }
@@ -157,12 +216,13 @@ bool ForceTransmissionLocal::run(mc_control::fsm::Controller & ctl_)
   return true;
 }
 
-
-
-/// @brief Adds the force damping tasks to the robots, with robot A being the one checked, that is : if (1) the human controlling robot A is close to the robot B it's interacting with, (2) the (filtered) force measured on one of the robot A's limbs that has a force sensor is over a certain threshold, or (3) a boolean condition in the force_activation vector
-/// @param ctl_ 
-/// @param robot_indx 
-/// @return 
+/// @brief Adds the force damping tasks to the robots, with robot A being the one checked, that is : if (1) the human
+/// controlling robot A is close to the robot B it's interacting with, (2) the (filtered) force measured on one of the
+/// robot A's limbs that has a force sensor is over a certain threshold, or (3) a boolean condition in the
+/// force_activation vector
+/// @param ctl_
+/// @param robot_indx
+/// @return
 bool ForceTransmissionLocal::checkActivation(mc_control::fsm::Controller & ctl_, const int robot_indx)
 {
   auto & ctl = static_cast<BiRobotTeleoperation &>(ctl_);
@@ -182,44 +242,50 @@ bool ForceTransmissionLocal::checkActivation(mc_control::fsm::Controller & ctl_,
     const auto fs_limb_a = biRobotTeleop::str2Limb(l);
     const auto f = robot_indx == 1 ? ctl.r_1_.getName(fs_limb_a) : ctl.r_2_.getName(fs_limb_a);
     const auto w = ctl_.robots().robot(robot_name).frame(f).wrench();
-    activation_force_measurements[filter_indx].update(w);  // update the low pass filter corresponding to the fs limb
+    activation_force_measurements[filter_indx].update(w); // update the low pass filter corresponding to the fs limb
 
     double min_d = 1e9;
     for(int i = 1; i <= biRobotTeleop::Limbs::RightArm; i++)
     {
       const auto limb_i = static_cast<biRobotTeleop::Limbs>(i);
       // const auto frame_b_i = robot_b_pose.getName(limb_i);
-      const double d = getContactDistance(ctl_, robot_indx == 1 ? 2 : 1, limb_i, fs_limb_a).norm(); // contact distance for the pair h/r B and the considered limbs
+      const double d = getContactDistance(ctl_, robot_indx == 1 ? 2 : 1, limb_i, fs_limb_a)
+                           .norm(); // contact distance for the pair h/r B and the considered limbs
       min_d = std::min(d, min_d);
-    } //loops on the other pair B and gets the closest distance between the fs limb (here of the human controlling robot A) and all the robot limbs 
+    } // loops on the other pair B and gets the closest distance between the fs limb (here of the human controlling
+      // robot A) and all the robot limbs
 
-
-    //plusieurs conditions : 
-    //la force mesuree sur robot A (apres filtre) est plus grande que le threshold
-    //la paire B est suffisemment proche
-    //force_activation[filter_indx]  (jai pas ecnore compris a quoi ca servait)
+    // plusieurs conditions :
+    // la force mesuree sur robot A (apres filtre) est plus grande que le threshold
+    // la paire B est suffisemment proche
+    // force_activation[filter_indx]  (jai pas ecnore compris a quoi ca servait)
     if(activation_force_measurements[filter_indx].eval().vector().norm() > force_activation_threshold_
        || min_d < distance_activation_threshold_ || force_activation[filter_indx])
     {
-      activation_enforced_ = force_activation[filter_indx];// pas onblige d etre a true.... j ai limpression au il change pas de valeur ???
+      activation_enforced_ = force_activation[filter_indx]; // pas onblige d etre a true.... j ai limpression au il
+                                                            // change pas de valeur ???
 
       // Once a force sensor is in contact, we set the limb in contact and activate the force task;
       mc_rtc::log::info("[{}] contact measured on frame {}, adding task", name(), f);
-      task_a_ = std::make_shared<mc_tasks::force::DampingTask>(ctl.robots().robot(robot_name).frame(f));// a revoir
+      task_a_ = std::make_shared<mc_tasks::force::DampingTask>(ctl.robots().robot(robot_name).frame(f)); // a revoir
       task_a_->load(ctl.solver(), config_(robot_name)("task"));
       task_a_->velFilterGain(0.9);
       task_a_->name(task_a_->name() + "_a");
-      limb_a_ = fs_limb_a; 
+      limb_a_ = fs_limb_a;
       ctl.solver().addTask(task_a_);
-      active_force_measurement_ = &activation_force_measurements[filter_indx]; //the wrench value, with the lowpass filter
+      active_force_measurement_ =
+          &activation_force_measurements[filter_indx]; // the wrench value, with the lowpass filter
       indx_ = robot_indx;
       robot_a_name_ = robot_name;
 
       robot_b_name_ = (robot_a_name_ == "robot_1") ? "robot_2" : "robot_1";
 
-      limb_b_ = getContactLimb(ctl, robot_indx, fs_limb_a); // returns the limb of the human that is closest to the robot limb specified for the pair A (human limb close to the fs limb of robot A)
+      limb_b_ = getContactLimb(ctl, robot_indx,
+                               fs_limb_a); // returns the limb of the human that is closest to the robot limb specified
+                                           // for the pair A (human limb close to the fs limb of robot A)
       mc_rbdyn::Robot & robot_b = ctl.robots().robot(robot_b_name_);
-      contact_limb_ = biRobotTeleop::limb2Str(limb_b_); // it will have to be the limb that robot B moves to be in contact with his human
+      contact_limb_ = biRobotTeleop::limb2Str(
+          limb_b_); // it will have to be the limb that robot B moves to be in contact with his human
       const std::string link_b = robot_indx == 1 ? ctl.r_2_.getName(limb_b_) : ctl.r_1_.getName(limb_b_);
       robot_b_custom_force_sensor_name_ = robot_b_name_ + "_" + contact_limb_;
       if(!robot_b.bodyHasForceSensor(link_b))
@@ -250,10 +316,7 @@ bool ForceTransmissionLocal::checkActivation(mc_control::fsm::Controller & ctl_,
   return false;
 }
 
-/// @brief Given a robot (1 or 2), finds its human's closest limb to this robot's limb (specified) 
-/// @param ctl_ 
-/// @param robot_indx 
-/// @param robot_limb 
+/// @brief Given a robot (1 or 2), finds its human's closest limb to this robot's limb (specified)
 /// @return limb of the human that is closest to the robot limb specified
 const biRobotTeleop::Limbs ForceTransmissionLocal::getContactLimb(mc_control::fsm::Controller & ctl_,
                                                                   const int robot_indx,
@@ -271,7 +334,8 @@ const biRobotTeleop::Limbs ForceTransmissionLocal::getContactLimb(mc_control::fs
       continue;
     }
 
-    const auto d = getContactDistance(ctl_, robot_indx, robot_limb, limb).norm();  // gets distance for the r/h pair and the limbs
+    const auto d =
+        getContactDistance(ctl_, robot_indx, robot_limb, limb).norm(); // gets distance for the r/h pair and the limbs
 
     if(d < min_d)
     {
@@ -283,13 +347,8 @@ const biRobotTeleop::Limbs ForceTransmissionLocal::getContactLimb(mc_control::fs
   return output_limb;
 }
 
-
-/// @brief Given a robot (1 or 2), computes the distance between this robot's limb and the limb of the human it's interacting with
-/// @param ctl_ 
-/// @param robot_indx 
-/// @param limb_robot 
-/// @param limb_human 
-/// @return distance between robot and human limb
+/// @brief Given a robot (1 or 2), computes the distance between this robot's limb and the limb of the human it's
+/// interacting with
 const Eigen::Vector3d ForceTransmissionLocal::getContactDistance(mc_control::fsm::Controller & ctl_,
                                                                  const int robot_indx,
                                                                  const biRobotTeleop::Limbs limb_robot,
@@ -298,14 +357,19 @@ const Eigen::Vector3d ForceTransmissionLocal::getContactDistance(mc_control::fsm
   auto & ctl = static_cast<BiRobotTeleoperation &>(ctl_);
   const std::string robot_name = "robot_" + std::to_string(robot_indx);
   const auto & robot = ctl.robot(robot_name);
-  const auto rp = robot_indx == 1 ? ctl.r_1_ : ctl.r_2_;// robot pose
+  const auto rp = robot_indx == 1 ? ctl.r_1_ : ctl.r_2_; // robot pose
   const auto h = ctl.getHumanPose(robot_indx == 1 ? 1 : 0); // c'est human 1 et robot 2 par exemple
   // paire H/R en interaction
 
-  auto human_cvx = h.getConvex(limb_human);
+  auto human_cvx = h.getConvex(limb_human, human_1_estimated);
+
+  if(robot_indx==1){
+     human_cvx = h.getConvex(limb_human, human_2_estimated);
+  }
+
   const auto & robot_cvx = robot.convex(rp.getConvexName(limb_robot));
 
-  sch::CD_Pair pair_limb_frame(&human_cvx, robot_cvx.second.get());
+  sch::CD_Pair pair_limb_frame(human_cvx.get(), robot_cvx.second.get());
 
   sch::Point3 p1, p2;
   pair_limb_frame.getClosestPoints(p1, p2);
@@ -313,6 +377,39 @@ const Eigen::Vector3d ForceTransmissionLocal::getContactDistance(mc_control::fsm
   Eigen::Vector3d out;
   out << p1[0] - p2[0], p1[1] - p2[1], p1[2] - p2[2];
   return out;
+}
+
+void ForceTransmissionLocal::getestimatedContactWrench(mc_control::fsm::Controller & ctl_, const std::string & surface)
+{
+  static const std::map<std::string, int> surfaceMap = {{"RightFoot", 0},   {"LeftFoot", 1},  {"RightGripper", 2},
+                                                        {"LeftGripper", 3}, {"RightHand", 2}, {"LeftHand", 3}};
+
+  auto it = surfaceMap.find(surface);
+
+  int i = it->second;
+  if(exportContactWrench_)
+  {
+    if(it == surfaceMap.end())
+    {
+      mc_rtc::log::error("[ObserverbasedImpedanceTask] Surface name is not correct");
+      return;
+    }
+    if(ctl_->datastore().has(robot_ + "::estimatedContactWrench_" + std::to_string(i)))
+    {
+      estimatedContactWrench_ =
+          ctl_->datastore().get<sva::ForceVecd>(robot_ + "::estimatedContactWrench_" + std::to_string(i));
+      estimatedContactWrench_ = replaceForceTorque(estimatedContactWrench_);
+    }
+  }
+}
+
+sva::ForceVecd ForceTransmissionLocal::replaceForceTorque(sva::ForceVecd target)
+{
+  sva::ForceVecd tmp = sva::ForceVecd::Zero();
+  tmp.couple() = target.force();
+  tmp.force() = target.couple();
+
+  return tmp;
 }
 
 void ForceTransmissionLocal::addLog(mc_control::fsm::Controller & ctl_)

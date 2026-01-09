@@ -53,6 +53,59 @@ struct ForceTransmissionLocal : mc_control::fsm::State
 
   bool checkActivation(mc_control::fsm::Controller & ctl_, const int robot_indx);
 
+  sva::ForceVecd ForceTransmissionLocal::replaceForceTorque(sva::ForceVecd target);
+  void ForceTransmissionLocal::getestimatedContactWrench(mc_control::fsm::Controller & ctl_,
+                                                         const std::string & surface);
+
+
+  sva::ForceVecd ObserverbasedImpedanceTask::transformExternalWrench(const sva::ForceVecd wrench,
+                                                                   const std::string surface)
+    {
+    sva::PTransformd X_0_surface = robots.robot(rIndex).frame(surface).position(); // ^surface X_0
+
+    sva::PTransformd X_0_centroid = worldCentroidKinePTrans_; // ^controid X_0
+
+    sva::PTransformd X_surface_com = X_0_surface * X_0_centroid.inv();
+
+    sva::ForceVecd wrench_out = X_surface_com.dualMul(wrench);
+
+    return wrench_out;
+    }
+
+    void ObserverbasedImpedanceTask::getestimatedExternalWrench()
+    {
+        if(exportExternalWrench_)
+        {
+            if(controller_->datastore().has(robot_ + "::estimatedExternalWrench_Force")
+            && controller_->datastore().has(robot_ + "::estimatedExternalWrench_Torque"))
+            {
+            estimatedExternalWrench_centroid_.force() =
+                controller_->datastore().get<Eigen::Vector3d>(robot_ + "::estimatedExternalWrench_Force");
+            estimatedExternalWrench_centroid_.couple() =
+                controller_->datastore().get<Eigen::Vector3d>(robot_ + "::estimatedExternalWrench_Torque");
+            }
+            else
+            {
+            auto keys = controller_->datastore().keys();
+            std::string keys_str;
+            for(size_t i = 0; i < keys.size(); ++i)
+            {
+                keys_str += keys[i];
+                if(i < keys.size() - 1) keys_str += ", ";
+            }
+
+            // mc_rtc::log::error("[ObserverbasedImpedanceTask] {} is empty. \n Available keys are {}",
+            //                    robot_ + "::estimatedExternalWrench", keys_str);
+            }
+            if(controller_->datastore().has(robot_ + "::worldCentroidKinePTrans"))
+            {
+            worldCentroidKinePTrans_ = controller_->datastore().get<sva::PTransformd>(robot_ + "::worldCentroidKinePTrans");
+            }
+        }
+    // else { mc_rtc::log::error("[ObserverbasedImpedanceTask] No EstimatedExternalWrench is exported"); }
+    return;
+    }
+
   double dt_ = 5e-3;
 
   std::shared_ptr<mc_tasks::force::DampingTask> task_a_;
@@ -67,6 +120,9 @@ struct ForceTransmissionLocal : mc_control::fsm::State
 
   biRobotTeleop::Limbs limb_a_ = biRobotTeleop::Limbs::Head; // limbs of task on robot a
   biRobotTeleop::Limbs limb_b_ = biRobotTeleop::Limbs::Head; // limbs of task on robot b
+
+  const mc_rbdyn::Robot & human_1_estimated;
+  const mc_rbdyn::Robot & human_2_estimated;
 
   bool done_ = false;
 
@@ -99,4 +155,25 @@ struct ForceTransmissionLocal : mc_control::fsm::State
   double force_activation_threshold_ = 10; // force threshold on which the force control is activated;
   double distance_activation_threshold_ = 0.02;
   double deactivation_threshold_ = 0.15; // distance threshold on which the force control is deactivated
+
+private:
+  std::string robot_;
+  bool exportContactWrench_ = true;
+  bool exportExternalWrench_ = true;
+  int MaxContacts_ = 4;
+  std::string usingWrench_ = "Sensor";
+
+  bool addPlot_ = false;
+
+  sva::ForceVecd estimatedContactWrench_;
+  sva::ForceVecd estimatedContactWrench_sensorFrame_;
+
+  sva::ForceVecd estimatedExternalWrench_centroid_;
+  mc_control::MCController * controller_;
+
+  sva::ForceVecd estimationError_;
+
+  sva::ForceVecd surfaceWrench_;
+
+  sva::PTransformd worldCentroidKinePTrans_;
 };

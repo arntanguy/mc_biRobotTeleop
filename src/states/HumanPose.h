@@ -37,6 +37,8 @@ struct HumanPose : mc_control::fsm::State
   sva::PTransformd X_link_sensor_; // Transfo between sensor pose and link pose
   sva::PTransformd offset_global;
 
+  // mc_filter::LowPass<sva::PTransformd>
+
   std::map<biRobotTeleop::Limbs, int>
       online_data_count_; // One counter for each limbs, reseted each time a data has been updated, set the data as
                           // offline if the counter is above a threshold

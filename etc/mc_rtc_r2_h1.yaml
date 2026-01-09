@@ -25,7 +25,7 @@ server:
 
 distant_controller:
   # ip: 150.18.226.5 #host address of the distant controller
-  ip: 192.168.243.57
+  ip: 192.168.245.128
   sub_port: 4243
   pub_port: 4342
   human_name: human_2 #or human_1

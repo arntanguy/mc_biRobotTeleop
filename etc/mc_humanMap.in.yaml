@@ -9,6 +9,8 @@ human_1:
     pelvis:
       offset:
         #mc_human
+
+        # translation: [0, 0.15, 0.1]
         rotation: [0, -1.57, -1.57]
     arm:
       # radius: 0.05
@@ -17,8 +19,10 @@ human_1:
         # mc_human
         left:
           rotation: [0, 0, 3.14]
+          # translation: [0, 0.2, 0.07]
         right:
           rotation: [-1.57, 0, 0]
+          # translation: [0, 0.2, 0.07]
     forearm:
       # radius: 0.03
       # length: 0.2
@@ -35,8 +39,10 @@ human_1:
         # mc_human
         left:
           rotation: [0, 3.14, 3.14]
+          # translation: [-0.05, 0.12, 0.05]
         right:
           rotation: [-1.57, 0, 0]
+          # translation: [-0.05, 0.12, 0.05]
 
 #human_2 paramters
 human_2:
@@ -71,5 +77,7 @@ human_2:
         # mc_human
         left:
           rotation: [1.57, 0, 0]
+          # translation: [-0.05, 0.12, 0.05]
         right:
           rotation: [0, 3.14, 0]
+          # translation: [-0.05, 0.12, 0.05]

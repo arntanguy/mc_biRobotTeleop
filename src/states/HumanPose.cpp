@@ -216,14 +216,20 @@ bool HumanPose::run(mc_control::fsm::Controller & ctl_)
 
       if(has_tracker_func(device.first) && tracker_online_func(device.first))
       {
+        const biRobotTeleop::Limbs limb = device.second;
+
         const sva::PTransformd X_0_trackerRaw = tracker_pose_func(device.first);
         const auto X_robotTracker_tracker = X_0_trackerRaw * X_0_robotTracker.inv(); // tracker frame
         const sva::PTransformd X_0_tracker = X_robotTracker_tracker * X_link_sensor_ * X_0_RobotLink;
         // const sva::MotionVecd v_tracker = sva::PTransformd( (X_0_tracker * X_0_trackerRaw.inv()).rotation()  ) *
         // tracker_vel_func(device.first);
-        const sva::MotionVecd v_tracker =
-            sva::PTransformd((X_0_tracker.inv()).rotation()) * tracker_vel_func(device.first);
-        const biRobotTeleop::Limbs limb = device.second;
+
+
+
+        // X_0_tracker_filtered = lowPass_.eval(); // pour la securite... TODO
+
+        
+        
 
         if(checkNorm(X_0_robotTracker) || checkNorm(X_0_trackerRaw) || checkNorm(X_0_tracker))
         {
@@ -234,8 +240,8 @@ bool HumanPose::run(mc_control::fsm::Controller & ctl_)
           if(online_data_count_[limb] >= offline_threshold_ && h.limbActive(limb))
           {
             mc_rtc::log::warning("[{}] tracker on limb {} not received, {}, {}, {}", name(),
-                                 biRobotTeleop::limb2Str(limb), checkNorm(X_0_robotTracker), !checkNorm(X_0_trackerRaw),
-                                 !checkNorm(X_0_tracker));
+                                 biRobotTeleop::limb2Str(limb), checkNorm(X_0_robotTracker), checkNorm(X_0_trackerRaw),
+                                 checkNorm(X_0_tracker));
             h.setLimbActiveState(limb, false);
           }
           else if(online_data_count_[limb] < offline_threshold_)
@@ -246,6 +252,14 @@ bool HumanPose::run(mc_control::fsm::Controller & ctl_)
         else
         {
           // mc_rtc::log::info("[{}] tracker on limb {} received", name(), biRobotTeleop::limb2Str(limb));
+
+          const sva::MotionVecd v_tracker =
+          sva::PTransformd((X_0_tracker.inv()).rotation()) * tracker_vel_func(device.first);
+        
+
+          // init  : mc_filter::LowPass<sva::PTransformd>(dt_, 0.5)
+
+
           h.setPose(limb, X_0_tracker);
           h.setVel(limb, v_tracker);
           online_data_count_[limb] == 0;

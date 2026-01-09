@@ -4,7 +4,7 @@ Human_1_HandTrajTasks:
   tasks:
     Human_1_Left:
       type: bspline_trajectory
-      name: Human_1_RightHand
+      name: Human_1_RightHand_traj
       robot: human_1
       frame: LHandLink
       stiffness: 100
@@ -16,11 +16,12 @@ Human_1_HandTrajTasks:
         frame: TorsoLink
         # translation: [0.,0.2,0.1]
         # rotation: [-1.57,0,0]
-        translation: [0., 0.2, 0.2]
-        rotation: [0, -1.57, -1.57]
-      duration: 5
+        translation: [0.4, 0.3, 0.2]
+        rotation: [0.3, -1.57, -1.57]
+      duration: 10
       completion:
         timeElapsed: true
+        eval: 1e-2
     Human_Torso:
       type: orientation
       frame: TorsoLink
@@ -28,13 +29,19 @@ Human_1_HandTrajTasks:
       robot: human_1
       weight: 300
 
+    Human_1_posture:
+      type: posture
+      unactiveJoints: ["Root"]
+      robot: human_1
+      weight: 10
+
 
 Human_2_HandTrajTasks:
   base: MetaTasks
   tasks:
     Human_2_Right:
       type: bspline_trajectory
-      name: Human_2_LeftHand
+      name: Human_2_LeftHand_traj
       robot: human_2
       frame: RHandLink
       unactiveJoints: ["Root"]
@@ -57,6 +64,29 @@ Human_2_HandTrajTasks:
       duration: 5
       completion:
         timeElapsed: true
+        eval: 1e-2
+    Human_2_posture:
+      type: posture
+      unactiveJoints: ["Root"]
+      robot: human_2
+      weight: 5
+
+
+HumanPostures:
+  base: MetaTasks
+  tasks:
+    Human_1_posture:
+      type: posture
+      unactiveJoints: ["Root"]
+      robot: human_1
+      weight: 10
+    Human_2_posture:
+      type: posture
+      unactiveJoints: ["Root"]
+      robot: human_2
+      weight: 10
+   
+
 
 Human::ReachPose:
   base: Meta
@@ -87,7 +117,20 @@ HumanHandTasks:
       weight: 10
       duration: 5
       completion:
-        eval: 1e2
+        eval: 1e-2
+
+    # Human_Torso:
+    #   type: orientation
+    #   frame: TorsoLink
+    #   unactiveJoints: ["Root"]
+    #   robot: human_1
+    #   weight: 300
+    # Human_Torso:
+    #   type: orientation
+    #   frame: TorsoLink
+    #   unactiveJoints: ["Root"]
+    #   robot: human_12
+    #   weight: 300
 
 HumanEstimation_1:
   base: HumanPoseEstimation
@@ -112,15 +155,16 @@ HumanPoseData_human_2:
   link_sensor_transfo: #Transfo from link frame to sensor frame
     robot_1:
       rotation: [3.14, 0, 1.57]
-      translation: [0, 0, 0.1]
+      # translation: [0, 0, 0.1]
+      translation: [0.05, 0, 0.235] #for hrp2
     robot_2:
       rotation: [3.14, 0, -3.14]
-      translation: [-0.0201461, 0.0204169, 0.219]
+      translation: [0.05, 0.0, 0.219]
   calibration:
     robot_link: LeftHand
     device: RightHand_human_2
-    # link_calib_offset: #from human unified frame to robot frame
-    #   translation: [0.07,0.0,-0.25]
+    link_calib_offset: #from human unified frame to robot frame
+      translation: [0,0.05,-0.06] #for hrp2
 
 
 HumanPoseData_human_1:
@@ -131,7 +175,8 @@ HumanPoseData_human_1:
   robot_device: "Robot_RHPS1" #Device name attached to the robot
   robot_link: Head #Robot link on which the device is attached
   calibration:
-    robot_link: RightForearm
+    robot_link: RightHand
     device: LeftHand_human_1
     link_calib_offset: #from human unified frame to robot frame
-      translation: [0.07, 0.0, -0.25]
+      # translation: [0.07, 0.0, -0.25]if forearm
+      translation: [0.07, -0.07, -0.03]

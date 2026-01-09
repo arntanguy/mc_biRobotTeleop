@@ -103,7 +103,7 @@ void BiRobotTeleoperation::reset(const mc_control::ControllerResetData & reset_d
     config()("human_sim").add("active", true);
 
     // Load mc_HumanMap.yaml
-    mc_rtc::log::info("Loading human map configuration from mc_HumanMap_SimulationSingle.yaml");
+    mc_rtc::log::info("Loading human map configuration from mc_humanMap_SimulationSingle.yaml");
     mc_rtc::ConfigurationFile humanMapConfig(std::string{biRobotTeleop::ETC_PATH_BUILD}
                                              + "mc_humanMap_SimulationSingle.yaml");
     config().load(humanMapConfig);
@@ -129,6 +129,17 @@ void BiRobotTeleoperation::reset(const mc_control::ControllerResetData & reset_d
 
   init_();
   reset_();
+
+  // solver().addConstraintSet(std::make_unique<mc_solver::KinematicsConstraint>(robots(), robots().robotIndex("human_1"), solver().dt()));
+  // solver().addConstraintSet(std::make_unique<mc_solver::KinematicsConstraint>(robots(), robots().robotIndex("human_2"), solver().dt()));
+
+  // const auto h_2_indx = robots().robot("human_2").robotIndex();
+  // mc_solver::CollisionsConstraint h_2_collision_cstr(robots(),h_2_indx,h_2_indx,solver().dt());
+  // h_2_collision_cstr.addCollisions(solver(), robots().robot(h_2_indx).module().commonSelfCollisions());
+  // solver().addConstraintSet(h_2_collision_cstr);
+
+  // mc_rtc::log::info("added kinematics constraints for humans");
+
   run();
 }
 
@@ -180,7 +191,7 @@ void BiRobotTeleoperation::init_()
   setConvex("human_1", hp_1_, hp_1_filtered_);
   setConvex("human_2", hp_2_, hp_2_filtered_);
 
-  if(auto robotLimbMap = config.find("robot_limb_map"))
+  if(config.find("robot_limb_map"))
   {
     r_1_.load(*(config("robot_limb_map", mc_rtc::Configuration{}).find(robots().robot("robot_1").module().name)));
     r_2_.load(*(config("robot_limb_map", mc_rtc::Configuration{}).find(robots().robot("robot_2").module().name)));
@@ -604,18 +615,18 @@ void BiRobotTeleoperation::reset_()
     human_1.posW(sva::PTransformd::Identity());
     human_2.posW(sva::PTransformd::Identity());
 
-    human_2.posW(sva::PTransformd(sva::RotZ(M_PI), Eigen::Vector3d(0.4, 0., 0))
+    human_2.posW(sva::PTransformd(sva::RotZ(M_PI), Eigen::Vector3d(0.6, 0., 0))
                  * alignFeet(robot_1, "Foot", human_2, "Sole"));
 
     if(robot_2.module().name != "panda_default")
     {
-      human_1.posW(sva::PTransformd(sva::RotZ(M_PI), Eigen::Vector3d(0.4, 0., -0.3))
+      human_1.posW(sva::PTransformd(sva::RotZ(M_PI), Eigen::Vector3d(0.6, 0., -0.2))
                    * alignFeet(robot_2, "Foot", human_1, "Sole"));
     }
     else
     {
       // human_1.posW(sva::PTransformd(sva::RotZ(M_PI), Eigen::Vector3d(0.4 + 0.6 + 0.4, 0., 0.)) * human_2.posW() );
-      human_1.posW(sva::PTransformd(sva::RotZ(M_PI), Eigen::Vector3d(0.4, 0, 0.15)) * robot_2.posW()); // 0.7
+      human_1.posW(sva::PTransformd(sva::RotZ(M_PI), Eigen::Vector3d(0.4, 0, 0.15)) * robot_2.posW()); // 0.7      
     }
   }
 
@@ -627,6 +638,8 @@ void BiRobotTeleoperation::reset_()
 
     human_1.posW(sva::PTransformd(sva::RotZ(M_PI), Eigen::Vector3d(0.4, 0, 0.15)) * robot_2.posW()); // 0.7
     human_2.posW(sva::PTransformd(sva::RotZ(M_PI), Eigen::Vector3d(0.4, 0., 0.15)) * robot_1.posW());
+
+    solver().addConstraintSet(std::make_unique<mc_solver::KinematicsConstraint>(robots(), robots().robotIndex("human_2"), solver().dt()));
   }
 }
 

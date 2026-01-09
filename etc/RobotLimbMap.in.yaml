@@ -11,8 +11,11 @@ robot_limb_map:
       name: "R_SHOULDER_Y_LINK"
     left_forearm:
       name: "L_ELBOW_P_LINK"
+      adjusted_length: 0.1  # distance entre la position du parent joint and the actual extremity of the limb
+       #positive if the length of the convex is actually smaller than the distance between the two joint
     right_forearm:
       name: "R_ELBOW_P_LINK"
+      adjusted_length: 0.1
     pelvis:
       name: "body"
     head:
@@ -45,8 +48,10 @@ robot_limb_map:
       name: "RARM_LINK2"
     left_forearm:
       name: "LARM_LINK3"
+      adjusted_length: 0.09 
     right_forearm:
       name: "RARM_LINK3"
+      adjusted_length: 0.09
     pelvis:
       name: "BODY"
     head:

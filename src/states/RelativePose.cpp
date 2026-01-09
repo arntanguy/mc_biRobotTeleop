@@ -57,7 +57,6 @@ bool RelativePose::run(mc_control::fsm::Controller & ctl_)
 
   if(h.limbActive(biRobotTeleop::Limbs::Pelvis) && h.limbActive(humanTargetLimb_))
   {
-
     const double t_active = static_cast<double>(count_) * dt_;
     if(t_active < low_stiff_duration_)
     {

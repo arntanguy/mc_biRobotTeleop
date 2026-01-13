@@ -24,7 +24,7 @@ BiTeleopTask_1:
         rotation: [0, 1.57, -1.57] # for human
       vr:
         translation: [0., 0., 0.]
-        rotation: [1.57, 0.,0.] # for human
+        rotation: [1.57, 0., 0.] # for human
   robot_2:
     name: "robot_2"
     # links: ["RightArm","RightForearm","RightHand"]

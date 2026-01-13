@@ -48,7 +48,7 @@ robot_limb_map:
       name: "RARM_LINK2"
     left_forearm:
       name: "LARM_LINK3"
-      adjusted_length: 0.09 
+      adjusted_length: 0.09
     right_forearm:
       name: "RARM_LINK3"
       adjusted_length: 0.09

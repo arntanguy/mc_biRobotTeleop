@@ -224,12 +224,7 @@ bool HumanPose::run(mc_control::fsm::Controller & ctl_)
         // const sva::MotionVecd v_tracker = sva::PTransformd( (X_0_tracker * X_0_trackerRaw.inv()).rotation()  ) *
         // tracker_vel_func(device.first);
 
-
-
         // X_0_tracker_filtered = lowPass_.eval(); // pour la securite... TODO
-
-        
-        
 
         if(checkNorm(X_0_robotTracker) || checkNorm(X_0_trackerRaw) || checkNorm(X_0_tracker))
         {
@@ -254,11 +249,9 @@ bool HumanPose::run(mc_control::fsm::Controller & ctl_)
           // mc_rtc::log::info("[{}] tracker on limb {} received", name(), biRobotTeleop::limb2Str(limb));
 
           const sva::MotionVecd v_tracker =
-          sva::PTransformd((X_0_tracker.inv()).rotation()) * tracker_vel_func(device.first);
-        
+              sva::PTransformd((X_0_tracker.inv()).rotation()) * tracker_vel_func(device.first);
 
           // init  : mc_filter::LowPass<sva::PTransformd>(dt_, 0.5)
-
 
           h.setPose(limb, X_0_tracker);
           h.setVel(limb, v_tracker);

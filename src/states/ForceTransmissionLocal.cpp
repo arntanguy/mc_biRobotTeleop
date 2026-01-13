@@ -6,7 +6,6 @@
 #include <sch/S_Object/S_Cylinder.h>
 #include <sch/S_Object/S_Sphere.h>
 
-
 void ForceTransmissionLocal::configure(const mc_rtc::Configuration & config)
 {
 
@@ -16,20 +15,9 @@ void ForceTransmissionLocal::configure(const mc_rtc::Configuration & config)
 
   config("deactivation_threshold", deactivation_threshold_);
 
-  if(config.has("gains"))
-  {
-    gains_ = config("gains");
-  }
-  if(config.has("wrench"))
-  {
-    targetWrench(config("wrench"));
-  }
-  if(config.has("cutoffPeriod"))
-  {
-    cutoffPeriod(config("cutoffPeriod"));
-  }
 
-  robot_ = config("robot", robots.robot(rIndex).name());
+
+  // robot_ = config("robot", robots.robot(rIndex).name());
 
   if(config.has("exportValue"))
   {
@@ -63,8 +51,8 @@ void ForceTransmissionLocal::start(mc_control::fsm::Controller & ctl_)
   config_("robot_1")("force_sensor_limbs", force_sensor_limbs_robot_1_);
   config_("robot_2")("force_sensor_limbs", force_sensor_limbs_robot_2_);
 
-  human_1_estimated = ctl.external_robots_->robot("human_1_estimated");
-  human_2_estimated = ctl.external_robots_->robot("human_2_estimated");
+  human_1_estimated_ = & ctl.external_robots_->robot("human_1_estimated");
+  human_2_estimated_ = & ctl.external_robots_->robot("human_2_estimated");
 
   for(int _ = 0; _ < force_sensor_limbs_robot_1_.size(); _++)
   {
@@ -109,7 +97,7 @@ bool ForceTransmissionLocal::run(mc_control::fsm::Controller & ctl_)
     //     d_a > deactivation_threshold_) && !activation_enforced_)
     if((d_a > deactivation_threshold_) && !activation_enforced_) // activation enforced jsp trop ce quil fout la
     {
-      mc_rtc::log::info("[{}] Contact has been broken deactivate force control\nd_a {} d_b {}", name(), d_a, d_b);
+      mc_rtc::log::info("[{}] Contact has been broken, deactivate force control\nd_a {} d_b {}", name(), d_a, d_b);
       auto & frame = task_b_->frame();
       ctl.solver().removeTask(task_a_);
       ctl.solver().removeTask(task_b_);
@@ -167,19 +155,19 @@ bool ForceTransmissionLocal::run(mc_control::fsm::Controller & ctl_)
                              * sva::PTransformd(X_0_fb.rotation()).inv();
     const auto X_0_frame = task_b_->frame().position();
 
-    const auto wrench_fb = ctl.getCalibratedExtWrench(ctl.realRobot(robot_b_name_));
+    auto wrench_fb = ctl.getCalibratedExtWrench(ctl.realRobot(robot_b_name_));
 
-    if(controller_->datastore().has(robot_b_name_ + "::estimatedExternalWrench_Force")
-            && controller_->datastore().has(robot_b_name_ + "::estimatedExternalWrench_Torque"))
-            {
-            estimatedExternalWrench_centroid_.force() =
-                controller_->datastore().get<Eigen::Vector3d>(robot_b_name_ + "::estimatedExternalWrench_Force");
-            estimatedExternalWrench_centroid_.couple() =
-                controller_->datastore().get<Eigen::Vector3d>(robot_b_name_ + "::estimatedExternalWrench_Torque");
-                wrench_fb = estimatedExternalWrench_centroid_;
-            }
+    if(ctl.datastore().has(robot_b_name_ + "::estimatedExternalWrench_Force")
+       && ctl.datastore().has(robot_b_name_ + "::estimatedExternalWrench_Torque"))
+    {
+      estimatedExternalWrench_centroid_.force() =
+          ctl.datastore().get<Eigen::Vector3d>(robot_b_name_ + "::estimatedExternalWrench_Force");
+      estimatedExternalWrench_centroid_.couple() =
+          ctl.datastore().get<Eigen::Vector3d>(robot_b_name_ + "::estimatedExternalWrench_Torque");
+      wrench_fb = estimatedExternalWrench_centroid_;
 
-
+      mc_rtc::log::info("Wrench on robot {} is \n {}", robot_b_name_, wrench_fb);
+    }
 
     measured_wrench_b =
         (X_f_contactF_b.inv() * R_fb_limb_a).dualMul(sva::ForceVecd(Eigen::Vector3d::Zero(), wrench_fb.force()));
@@ -192,7 +180,6 @@ bool ForceTransmissionLocal::run(mc_control::fsm::Controller & ctl_)
 
     const auto fs_indx = robot_b.data()->forceSensorsIndex.at(robot_b_custom_force_sensor_name_);
     robot_b.data()->forceSensors[fs_indx].wrench(measured_wrench_b);
-
 
     // ctl_.robots().robot(robot_name).frame(f).wrench(); // this is where i am getting the wrench for now
 
@@ -361,10 +348,11 @@ const Eigen::Vector3d ForceTransmissionLocal::getContactDistance(mc_control::fsm
   const auto h = ctl.getHumanPose(robot_indx == 1 ? 1 : 0); // c'est human 1 et robot 2 par exemple
   // paire H/R en interaction
 
-  auto human_cvx = h.getConvex(limb_human, human_1_estimated);
+  auto human_cvx = h.getConvex(limb_human, *human_1_estimated_);
 
-  if(robot_indx==1){
-     human_cvx = h.getConvex(limb_human, human_2_estimated);
+  if(robot_indx == 1)
+  {
+    human_cvx = h.getConvex(limb_human, *human_2_estimated_);
   }
 
   const auto & robot_cvx = robot.convex(rp.getConvexName(limb_robot));
@@ -379,29 +367,58 @@ const Eigen::Vector3d ForceTransmissionLocal::getContactDistance(mc_control::fsm
   return out;
 }
 
-void ForceTransmissionLocal::getestimatedContactWrench(mc_control::fsm::Controller & ctl_, const std::string & surface)
-{
-  static const std::map<std::string, int> surfaceMap = {{"RightFoot", 0},   {"LeftFoot", 1},  {"RightGripper", 2},
-                                                        {"LeftGripper", 3}, {"RightHand", 2}, {"LeftHand", 3}};
 
-  auto it = surfaceMap.find(surface);
+// sva::ForceVecd ForceTransmissionLocal::transformExternalWrench(const sva::ForceVecd wrench,
+//                                                                      const std::string surface, int rIndex)
+//   {
+//     sva::PTransformd X_0_surface = robots.robot(rIndex).frame(surface).position(); // ^surface X_0
 
-  int i = it->second;
-  if(exportContactWrench_)
+//     sva::PTransformd X_0_centroid = worldCentroidKinePTrans_; // ^controid X_0
+
+//     sva::PTransformd X_surface_com = X_0_surface * X_0_centroid.inv();
+
+//     sva::ForceVecd wrench_out = X_surface_com.dualMul(wrench);
+
+//     return wrench_out;
+//   }
+
+
+void ForceTransmissionLocal::getestimatedExternalWrench(mc_control::fsm::Controller & ctl_)
   {
-    if(it == surfaceMap.end())
+    auto & ctl = static_cast<BiRobotTeleoperation &>(ctl_);
+    if(exportExternalWrench_)
     {
-      mc_rtc::log::error("[ObserverbasedImpedanceTask] Surface name is not correct");
-      return;
+      if(ctl.datastore().has(robot_ + "::estimatedExternalWrench_Force")
+         && ctl.datastore().has(robot_ + "::estimatedExternalWrench_Torque"))
+      {
+        estimatedExternalWrench_centroid_.force() =
+            ctl.datastore().get<Eigen::Vector3d>(robot_ + "::estimatedExternalWrench_Force");
+        estimatedExternalWrench_centroid_.couple() =
+            ctl.datastore().get<Eigen::Vector3d>(robot_ + "::estimatedExternalWrench_Torque");
+      }
+      else
+      {
+        auto keys = ctl.datastore().keys();
+        std::string keys_str;
+        for(size_t i = 0; i < keys.size(); ++i)
+        {
+          keys_str += keys[i];
+          if(i < keys.size() - 1) keys_str += ", ";
+        }
+
+        // mc_rtc::log::error("[ObserverbasedImpedanceTask] {} is empty. \n Available keys are {}",
+        //                    robot_ + "::estimatedExternalWrench", keys_str);
+      }
+      if(ctl.datastore().has(robot_ + "::worldCentroidKinePTrans"))
+      {
+        worldCentroidKinePTrans_ = ctl.datastore().get<sva::PTransformd>(robot_ + "::worldCentroidKinePTrans");
+      }
     }
-    if(ctl_->datastore().has(robot_ + "::estimatedContactWrench_" + std::to_string(i)))
-    {
-      estimatedContactWrench_ =
-          ctl_->datastore().get<sva::ForceVecd>(robot_ + "::estimatedContactWrench_" + std::to_string(i));
-      estimatedContactWrench_ = replaceForceTorque(estimatedContactWrench_);
-    }
+    // else { mc_rtc::log::error("[ObserverbasedImpedanceTask] No EstimatedExternalWrench is exported"); }
+    return;
   }
-}
+
+
 
 sva::ForceVecd ForceTransmissionLocal::replaceForceTorque(sva::ForceVecd target)
 {

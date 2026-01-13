@@ -11,6 +11,17 @@ ObserverPipelines:
     update_robot: robot_1
     required: true
     update: true
+  - type: MCKineticsObserver
+    update: true
+    config:
+      robot: robot1
+      withDebugLogs: true
+      leggedOdometry:
+        odometryType: None
+      exportValue:
+        exportContactWrench: true
+        exportExternalWrench: true
+
     # - type: KinematicInertial
     #   robot: robot_1
     #   update_robot: robot_1
@@ -54,3 +65,13 @@ ObserverPipelines:
   - type: Encoder
     robot: robot_2
     update_robot: robot_2
+  - type: MCKineticsObserver
+    update: true
+    config:
+      robot: robot2
+      withDebugLogs: true
+      leggedOdometry:
+        odometryType: None
+      exportValue:
+        exportContactWrench: true
+        exportExternalWrench: true

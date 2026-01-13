@@ -52,7 +52,6 @@ foreach(
   HumanMap
   mc_humanMap
   mc_humanMap_SimulationSingle
-  mc_humanMap_TestAlcie
   Observers
   Stabilizer
   ForcesTasks

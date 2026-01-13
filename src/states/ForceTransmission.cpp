@@ -22,8 +22,8 @@ void ForceTransmission::start(mc_control::fsm::Controller & ctl_)
   auto & ctl = static_cast<BiRobotTeleoperation &>(ctl_);
   std::string robot_name = ctl_.robots().robot(0).name();
 
-  human_1_estimated = ctl.external_robots_->robot("human_1_estimated");
-  human_2_estimated = ctl.external_robots_->robot("human_2_estimated");
+  human_1_estimated_ = & ctl.external_robots_->robot("human_1_estimated");
+  human_2_estimated_ = & ctl.external_robots_->robot("human_2_estimated");
 
   dt_ = ctl_.timeStep;
 
@@ -323,10 +323,11 @@ Eigen::Vector3d ForceTransmission::getContactDistance(mc_control::fsm::Controlle
   const auto h = ctl.getHumanPose(ctl.getHumanIndx());
   const auto r = ctl.getRobotPose(ctl.getHumanIndx());
 
-  auto human_cvx= h.getConvex(limb_human, human_1_estimated);
+  auto human_cvx = h.getConvex(limb_human, *human_1_estimated_);
 
-  if(ctl.getHumanIndx()==1){
-     human_cvx = h.getConvex(limb_human, human_2_estimated);
+  if(ctl.getHumanIndx() == 1)
+  {
+    human_cvx = h.getConvex(limb_human, *human_2_estimated_);
   }
   auto robot_cvx = robot.convex(r.getConvexName(limb_robot));
 

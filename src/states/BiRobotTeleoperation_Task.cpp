@@ -84,7 +84,6 @@ void BiRobotTeleoperation_Task::start(mc_control::fsm::Controller & ctl_)
     std::shared_ptr<mc_tasks::biRobotTeleopTask> task = std::make_shared<mc_tasks::biRobotTeleopTask>(
         ctl.solver(), r1, r2, human_1_estimated, human_2_estimated, r1_links_[k], r2_links_[k]);
     task->setMode(ctl_.config()("mode"));
-    std::cout << "setting mode ; "<< ctl_.config()("mode") <<std::endl;
     task->load(ctl.solver(), state_config_);
     task->updateRobotLinksMap(ctl.r_1_, ctl.r_2_);
     task->updateHumanLimbMap(global_config("human")("limb_map"));

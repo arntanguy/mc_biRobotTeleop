@@ -130,8 +130,10 @@ void BiRobotTeleoperation::reset(const mc_control::ControllerResetData & reset_d
   init_();
   reset_();
 
-  // solver().addConstraintSet(std::make_unique<mc_solver::KinematicsConstraint>(robots(), robots().robotIndex("human_1"), solver().dt()));
-  // solver().addConstraintSet(std::make_unique<mc_solver::KinematicsConstraint>(robots(), robots().robotIndex("human_2"), solver().dt()));
+  // solver().addConstraintSet(std::make_unique<mc_solver::KinematicsConstraint>(robots(),
+  // robots().robotIndex("human_1"), solver().dt()));
+  // solver().addConstraintSet(std::make_unique<mc_solver::KinematicsConstraint>(robots(),
+  // robots().robotIndex("human_2"), solver().dt()));
 
   // const auto h_2_indx = robots().robot("human_2").robotIndex();
   // mc_solver::CollisionsConstraint h_2_collision_cstr(robots(),h_2_indx,h_2_indx,solver().dt());
@@ -626,7 +628,7 @@ void BiRobotTeleoperation::reset_()
     else
     {
       // human_1.posW(sva::PTransformd(sva::RotZ(M_PI), Eigen::Vector3d(0.4 + 0.6 + 0.4, 0., 0.)) * human_2.posW() );
-      human_1.posW(sva::PTransformd(sva::RotZ(M_PI), Eigen::Vector3d(0.4, 0, 0.15)) * robot_2.posW()); // 0.7      
+      human_1.posW(sva::PTransformd(sva::RotZ(M_PI), Eigen::Vector3d(0.4, 0, 0.15)) * robot_2.posW()); // 0.7
     }
   }
 
@@ -639,7 +641,8 @@ void BiRobotTeleoperation::reset_()
     human_1.posW(sva::PTransformd(sva::RotZ(M_PI), Eigen::Vector3d(0.4, 0, 0.15)) * robot_2.posW()); // 0.7
     human_2.posW(sva::PTransformd(sva::RotZ(M_PI), Eigen::Vector3d(0.4, 0., 0.15)) * robot_1.posW());
 
-    solver().addConstraintSet(std::make_unique<mc_solver::KinematicsConstraint>(robots(), robots().robotIndex("human_2"), solver().dt()));
+    solver().addConstraintSet(
+        std::make_unique<mc_solver::KinematicsConstraint>(robots(), robots().robotIndex("human_2"), solver().dt()));
   }
 }
 

@@ -1,7 +1,7 @@
 ---
 MainRobot:
   name: robot_2 # for robot_1
-  module: RHPS1_sake2_sake2 #_forceshoe_forceshoe_lirmm_lirmm # desired robot module
+  module: HRP4::ImpactGrippers # RHPS1_sake2_sake2 #_forceshoe_forceshoe_lirmm_lirmm # desired robot module
 Enabled: BiRobotTeleoperation
 Log: false
 

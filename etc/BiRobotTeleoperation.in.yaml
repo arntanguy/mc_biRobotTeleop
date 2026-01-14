@@ -11,9 +11,9 @@ StatesFiles:
 - "@MC_STATES_RUNTIME_INSTALL_PREFIX@/data"
 VerboseStateFactory: false
 
-# mode: SimulationSingle
+mode: SimulationSingle
 # mode: SingleVR
-mode: DualVR
+# mode: DualVR
 
 # human or simple_human
 # estimation_module: simple_human
@@ -24,10 +24,13 @@ robots:
   ground:
     module: env/ground
   robot_1:
-    # module: HRP4::ImpactGrippers
-    module: HRP2DRC  #for hrp2
+    module: HRP4::ImpactGrippers
+    # module: HRP2DRC  #for hrp2
   robot_2:
-    module: RHPS1_sake2_sake2  #_forceshoe_forceshoe_lirmm_lirmm  _MuJoCo
+    module: HRP4::ImpactGrippers #_forceshoe_forceshoe_lirmm_lirmm  _MuJoCo
+    init_pos:
+      translation: [0.7, 0, 0.75]
+      rotation: [0, 0, 3.14]
 
 # General constraints, always on
 constraints:

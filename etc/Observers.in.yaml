@@ -14,7 +14,7 @@ ObserverPipelines:
   - type: MCKineticsObserver
     update: true
     config:
-      robot: robot1
+      robot: robot_1
       withDebugLogs: true
       leggedOdometry:
         odometryType: None

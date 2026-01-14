@@ -5,6 +5,11 @@ Forces:
   force_activation_threshold: 10 #6d force norm
   distance_activation_threshold: 0.01
   deactivation_threshold: 0.05 #[m]
+
+  exportValue:
+    exportContactWrench: true
+    exportExternalWrench: true
+
   robot_1:
     # force_sensor_limbs: ["LeftHand","RightHand"]
     force_sensor_limbs: []

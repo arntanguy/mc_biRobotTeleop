@@ -69,12 +69,38 @@ void ForceTransmissionLocal::start(mc_control::fsm::Controller & ctl_)
 
   addGUI(ctl_);
   addLog(ctl_);
+
+    auto a = ctl_.datastore().keys();
+  for(std::string key:a){
+    std::cout << key <<std::endl;
+  }
+
 }
 
 bool ForceTransmissionLocal::run(mc_control::fsm::Controller & ctl_)
 {
   auto & ctl = static_cast<BiRobotTeleoperation &>(ctl_);
   output("OK");
+
+
+
+
+
+  if(ctl.datastore().has("robot_1::estimatedExternalWrench_Force")
+       && ctl.datastore().has("robot_1::estimatedExternalWrench_Torque"))
+    {
+
+      auto wrench_fb = ctl.getCalibratedExtWrench(ctl.realRobot(robot_b_name_));
+      wrench_fb.force() =
+          ctl.datastore().get<Eigen::Vector3d>("robot_1::estimatedExternalWrench_Force");
+      wrench_fb.couple() =
+          ctl.datastore().get<Eigen::Vector3d>("robot_1::estimatedExternalWrench_Torque");
+     
+
+      mc_rtc::log::info("HIII Wrench on robot {} is \n {}", "robot_1", wrench_fb);
+    }
+
+
 
   if(!active_) // if not active, look if the force sensors measure a contact
   {
@@ -126,10 +152,13 @@ bool ForceTransmissionLocal::run(mc_control::fsm::Controller & ctl_)
   if(task_a_->frame().hasForceSensor())
   {
     measured_wrench_a = task_a_->frame().wrench();
+
+
+    //const auto w = ctl_.robots().robot(robot_name).frame(f).wrench();
     if(activation_enforced_)
     {
       auto indx = ctl.robot(robot_a_name_).data()->forceSensorsIndex["LeftHandForceSensor"];
-      // minus between frame and fs
+      // minus between frame and force sensor
       ctl.robot(robot_a_name_)
           .data()
           ->forceSensors[indx]
@@ -137,12 +166,17 @@ bool ForceTransmissionLocal::run(mc_control::fsm::Controller & ctl_)
     }
   }
 
+  mc_rtc::log::info("HELLO");
   if(task_b_->frame().hasForceSensor() && task_b_->frame().forceSensor().name() != robot_b_custom_force_sensor_name_)
   {
     measured_wrench_b = task_b_->frame().wrench();
+
+    mc_rtc::log::info("robot {} has a force sensor named {}", robot_b_name_, task_b_->frame().forceSensor().name());
   }
   else
   {
+
+    mc_rtc::log::info("robot {} does not have a force sensor ", robot_b_name_);
     /// TODO with kinetics observer
 
     // if the link is not equipped with F/T sensing, we use an estimator that will set the global estimatied force in

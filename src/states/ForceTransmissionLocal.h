@@ -94,8 +94,8 @@ struct ForceTransmissionLocal : mc_control::fsm::State
   std::vector<bool> robot_2_force_activation_; // to enforce activation
   bool activation_enforced_ = false;
 
-  std::string robot_b_name_;
-  std::string robot_a_name_;
+  std::string robot_b_name_ = "robot_1";
+  std::string robot_a_name_ = "robot_2";
 
   mc_filter::LowPass<sva::ForceVecd> * active_force_measurement_ =
       nullptr; // If the active force control filtered measurement is below the threshold, the force control is

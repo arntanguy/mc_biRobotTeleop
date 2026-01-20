@@ -29,7 +29,7 @@ robots:
   robot_2:
     module: HRP4::ImpactGrippers #_forceshoe_forceshoe_lirmm_lirmm  _MuJoCo
     init_pos:
-      translation: [0.7, 0, 0.75]
+      translation: [0.7, 0, 0.747187]
       rotation: [0, 0, 3.14]
 
 # General constraints, always on
@@ -380,8 +380,7 @@ OpenVRPlugin:
   distantData:
     port: 12338
     # ip: 150.18.226.6
-    # ip: 192.168.240.39
-    ip: 192.168.245.128
+    ip: 192.168.245.117
 
     # max_packet_size: 10
     verbose: false

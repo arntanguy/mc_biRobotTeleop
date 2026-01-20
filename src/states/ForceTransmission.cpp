@@ -22,8 +22,8 @@ void ForceTransmission::start(mc_control::fsm::Controller & ctl_)
   auto & ctl = static_cast<BiRobotTeleoperation &>(ctl_);
   std::string robot_name = ctl_.robots().robot(0).name();
 
-  human_1_estimated_ = & ctl.external_robots_->robot("human_1_estimated");
-  human_2_estimated_ = & ctl.external_robots_->robot("human_2_estimated");
+  human_1_estimated_ = &ctl.external_robots_->robot("human_1_estimated");
+  human_2_estimated_ = &ctl.external_robots_->robot("human_2_estimated");
 
   dt_ = ctl_.timeStep;
 

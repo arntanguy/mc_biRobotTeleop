@@ -123,6 +123,10 @@ struct ForceTransmissionLocal : mc_control::fsm::State
     }
   }
 
+
+
+
+
   double dt_ = 5e-3;
 
   std::shared_ptr<mc_tasks::force::DampingTask> task_a_;
@@ -167,8 +171,12 @@ struct ForceTransmissionLocal : mc_control::fsm::State
   std::vector<std::string> force_sensor_limbs_robot_1_;
   std::vector<std::string> force_sensor_limbs_robot_2_;
 
-  sva::ForceVecd measured_force_robot_1_ = sva::ForceVecd::Zero(); // measured force in the link frame
-  sva::ForceVecd measured_force_robot_2_ = sva::ForceVecd::Zero(); // measured force in the link frame
+  sva::ForceVecd measured_wrench_a = sva::ForceVecd::Zero(); // measured force in the link frame
+  sva::ForceVecd measured_wrench_b = sva::ForceVecd::Zero(); // measured force in the link frame
+  sva::ForceVecd measured_wrench_a_centroid = sva::ForceVecd::Zero(); // measured force in the link frame
+  sva::ForceVecd measured_wrench_b_centroid = sva::ForceVecd::Zero(); // measured force in the link frame
+  sva::ForceVecd measured_wrench_b_centroid_trasnform = sva::ForceVecd::Zero(); // measured force in the link frame
+  sva::ForceVecd measured_wrench_a_centroid_trasnform = sva::ForceVecd::Zero(); // measured force in the link frame
 
   double force_activation_threshold_ = 10; // force threshold on which the force control is activated;
   double distance_activation_threshold_ = 0.02;

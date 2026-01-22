@@ -135,8 +135,8 @@ bool ForceTransmissionLocal::run(mc_control::fsm::Controller & ctl_)
     return true;
   }
 
-  sva::ForceVecd measured_wrench_a;
-  sva::ForceVecd measured_wrench_b;
+  // sva::ForceVecd measured_wrench_a;
+  // sva::ForceVecd measured_wrench_b;
 
   const biRobotTeleop::HumanPose & h_b = ctl.getHumanPose((indx_ == 1) ? 1 : 0);
   const biRobotTeleop::HumanPose & h_a = ctl.getHumanPose((indx_ == 1) ? 0 : 1);
@@ -198,11 +198,11 @@ bool ForceTransmissionLocal::run(mc_control::fsm::Controller & ctl_)
     measured_wrench_a =
         (X_f_contactF_a.inv() * R_fb_limb_b).dualMul(sva::ForceVecd(Eigen::Vector3d::Zero(), wrench_fb.force()));
 
-    sva::ForceVecd measured_wrench_a_centroid =
+    measured_wrench_a_centroid =
         (X_f_contactF_a.inv() * R_centroid_limb_b)
             .dualMul(sva::ForceVecd(Eigen::Vector3d::Zero(), wrench_fb_centroid.force()));
 
-    sva::ForceVecd measured_wrench_a_centroid_trasnform =
+    measured_wrench_a_centroid_trasnform =
         transformExternalWrench(estimatedExternalWrench_centroid_without_bias_[indx_ - 1], limb_b_, indx_, X_0_frame);
 
     // if(activation_enforced_)
@@ -257,15 +257,15 @@ bool ForceTransmissionLocal::run(mc_control::fsm::Controller & ctl_)
     measured_wrench_b = (X_f_contactF_b.inv() * R_fb_limb_a)
                             .dualMul(sva::ForceVecd(Eigen::Vector3d::Zero(),
                                                     wrench_fb.force())); // tester de mettre la transfo plus simplement
-    // transformation between the limb of task b and limb a of human  * transfor bw limb a and fb of robot b
+    // transformation between the limb of task b and limb a of human  * transformation (only rot) bw limb a and fb of robot b
 
     // h_a.getOffset(limb_a_) * h_a.getPose(limb_a_) * task_b_->frame().position().inv();
 
-    sva::ForceVecd measured_wrench_b_centroid =
+    measured_wrench_b_centroid =
         (X_f_contactF_b.inv() * R_centroid_limb_a)
             .dualMul(sva::ForceVecd(Eigen::Vector3d::Zero(), wrench_fb_centroid.force()));
 
-    sva::ForceVecd measured_wrench_b_centroid_trasnform =
+    measured_wrench_b_centroid_trasnform =
         transformExternalWrench(estimatedExternalWrench_centroid_without_bias_[indx_ == 2 ? 0 : 1], limb_b_,
                                 indx_ == 2 ? 1 : 2, task_b_->frame().position());
 
@@ -754,7 +754,20 @@ sva::ForceVecd ForceTransmissionLocal::replaceForceTorque(sva::ForceVecd target)
 void ForceTransmissionLocal::addLog(mc_control::fsm::Controller & ctl_)
 {
   auto & logger = ctl_.logger();
+  logger.addLogEntry(name() + "_robot1_external_centroid", [this]() -> const sva::ForceVecd & { return estimatedExternalWrench_centroid_[0]; });
+  logger.addLogEntry(name() + "_robot1_external_centroid_without_bias", [this]() -> const sva::ForceVecd & { return estimatedExternalWrench_centroid_without_bias_[0]; });
+  logger.addLogEntry(name() + "_robot2_external_centroid", [this]() -> const sva::ForceVecd & { return estimatedExternalWrench_centroid_[1]; });
+  logger.addLogEntry(name() + "_robot2_external_centroid_without_bias", [this]() -> const sva::ForceVecd & { return estimatedExternalWrench_centroid_without_bias_[1]; });
+
+  logger.addLogEntry(name() + "_robota_on_frame_fs", [this]() -> const sva::ForceVecd & { return measured_wrench_a; });
+  logger.addLogEntry(name() + "_robota_on_frame_centroid", [this]() -> const sva::ForceVecd & { return measured_wrench_a_centroid; });
+  logger.addLogEntry(name() + "_robota_on_frame_with_full_transfo", [this]() -> const sva::ForceVecd & { return measured_wrench_a_centroid_trasnform; });
+  logger.addLogEntry(name() + "_robotb_on_frame_fs", [this]() -> const sva::ForceVecd & { return measured_wrench_b; });
+  logger.addLogEntry(name() + "_robotb_on_frame_centroid", [this]() -> const sva::ForceVecd & { return measured_wrench_b_centroid; });
+  logger.addLogEntry(name() + "_robotb_on_frame_with_full_transfo", [this]() -> const sva::ForceVecd & { return measured_wrench_b_centroid_trasnform; });
 }
+
+
 
 void ForceTransmissionLocal::addGUI(mc_control::fsm::Controller & ctl_)
 {

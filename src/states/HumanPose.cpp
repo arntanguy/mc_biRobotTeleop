@@ -57,6 +57,7 @@ void HumanPose::start(mc_control::fsm::Controller & ctl_)
       human_deviceTolimbs_[limb[0]] = biRobotTeleop::str2Limb(limb[1]);
       mc_rtc::log::info("[{}] limb {} mapped to device {}", name(), limb[1], limb[0]);
       online_data_count_[human_deviceTolimbs_[limb[0]]] = 0;
+      X_0_tracker_prev[human_deviceTolimbs_[limb[0]]] = sva::PTransformd::Identity();
     }
 
     config_("robot_device", robot_device_);
@@ -243,6 +244,13 @@ bool HumanPose::run(mc_control::fsm::Controller & ctl_)
           {
             online_data_count_[limb] += 1;
           }
+
+          mc_rtc::log::warning("[{}] tracker on limb {} not received, previous pose \n{}, \nttracjker prev \n{}",
+                               name(), biRobotTeleop::limb2Str(limb), h.getPose(limb), X_0_tracker_prev[limb]);
+
+          h.setPose(limb, X_0_tracker_prev[limb]);
+
+          // X_0_tracker = X_0_tracker_prev[limb] ;
         }
         else
         {
@@ -252,6 +260,23 @@ bool HumanPose::run(mc_control::fsm::Controller & ctl_)
               sva::PTransformd((X_0_tracker.inv()).rotation()) * tracker_vel_func(device.first);
 
           // init  : mc_filter::LowPass<sva::PTransformd>(dt_, 0.5)
+
+          if(abs((X_0_tracker.translation() - X_0_tracker_prev[limb].translation()).norm()) > 0.1)
+          { // and the rotation is not so big
+            std::cout << std::endl
+                      << "angular " << (X_0_tracker.translation() - X_0_tracker_prev[limb].translation()).norm()
+                      << " for limb " << biRobotTeleop::limb2Str(limb) << std::endl;  //// attention ici !!!
+                      // h.setLimbActiveState(limb, false);
+                      
+          }
+
+          else
+          {
+            // X_0_tracker_prev[limb] = X_0_tracker;  // cant do this !! otherwise pb at first iteration 
+            // h.setLimbActiveState(limb, true);
+          }
+          X_0_tracker_prev[limb] = X_0_tracker;
+          
 
           h.setPose(limb, X_0_tracker);
           h.setVel(limb, v_tracker);

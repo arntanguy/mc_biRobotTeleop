@@ -45,4 +45,6 @@ struct RelativePose : mc_control::fsm::State
   size_t count_ = 0;
   double low_stiff_duration_ = 1; // duration the task is at low stiff
   double full_stiff_duration_ = 1; // duration the task comes back to full stiff
+
+  sva::MotionVecd v_target_prev = sva::MotionVecd::Zero();
 };

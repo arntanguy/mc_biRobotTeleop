@@ -89,6 +89,16 @@ bool RelativePose::run(mc_control::fsm::Controller & ctl_)
     task_->target(X_0_taskTarget);
     task_->refVelB(v_target);
 
+    // if(abs((v_target.angular() - v_target_prev.angular()).norm()) > 1
+    //    || abs((v_target.linear() - v_target_prev.linear()).norm()) > 0.7)
+    // {
+    //   std::cout << std::endl
+    //             << "angular " << (v_target.angular() - v_target_prev.angular()).norm() << " linear "
+    //             << (v_target.linear() - v_target_prev.linear()).norm() << std::endl;
+    // }
+
+    // v_target_prev = v_target;
+
     if(sva::rotationError(X_0_taskTarget.rotation(), task_->frame().position().rotation()).norm() < completion_eval_)
     {
       return true;

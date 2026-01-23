@@ -118,9 +118,9 @@ bool ForceTransmissionLocal::run(mc_control::fsm::Controller & ctl_)
   }
 
   std::cout << " just checking the distance guys ! \n";
-  auto [closest_point_ra, human_pointa, distance_b] = getContactDistance(ctl_, indx_, limb_a_, limb_b_); // robot A human B
-  double d_b = distance_b.norm();
-  auto [closest_point_rb ,human_pointb, distance_a] = getContactDistance(ctl_, indx_ == 1 ? 2 : 1, limb_b_, limb_a_); // robot B human A
+  auto [closest_point_ra ,human_pointa, distance_b] = getDistanceAndContactPoint(ctl_, indx_, limb_a_, limb_b_); // robot A human B
+  double d_b  =distance_b.norm();
+  auto [closest_point_rb ,human_pointb, distance_a] = getDistanceAndContactPoint(ctl_, indx_ == 1 ? 2 : 1, limb_b_, limb_a_); // robot B human A
   double d_a = distance_a.norm();
  
 
@@ -381,9 +381,9 @@ bool ForceTransmissionLocal::checkActivation(mc_control::fsm::Controller & ctl_,
     {
       const auto limb_i = static_cast<biRobotTeleop::Limbs>(i);
       // const auto frame_b_i = robot_b_pose.getName(limb_i);
-      auto [_,__,distance] = getContactDistance(ctl_, robot_indx == 1 ? 2 : 1, limb_i, fs_limb_a);
+     const double d = getContactDistance(ctl_, robot_indx == 1 ? 2 : 1, limb_i, fs_limb_a).norm();
                             // contact distance for the pair h/r B and the considered limbs
-      const double d = distance.norm();          
+          
       min_d = std::min(d, min_d);
     } // loops on the other pair B and gets the closest distance between the fs limb (here of the human controlling
       // robot A) and all the robot limbs
@@ -530,9 +530,9 @@ bool ForceTransmissionLocal::checkActivationTest(mc_control::fsm::Controller & c
         continue;
       }
       // const auto frame_b_i = robot_b_pose.getName(limb_i);
-      auto [_,__,distance] = getContactDistance(ctl_, robot_indx == 1 ? 2 : 1, limb_i, limb_a);
+      const double d = getContactDistance(ctl_, robot_indx == 1 ? 2 : 1, limb_i, limb_a).norm();
                            // contact distance for the pair h/r B and the considered limbs
-      const double d = distance.norm(); 
+      
 
       min_d = std::min(d, min_d);
     } // loops on the other pair B and gets the closest distance between the fs limb (here of the human controlling
@@ -641,9 +641,9 @@ const biRobotTeleop::Limbs ForceTransmissionLocal::getContactLimb(mc_control::fs
       continue;
     }
 
-    auto [_,__,distance] =
-        getContactDistance(ctl_, robot_indx, robot_limb, limb); // gets distance for the r/h pair and the limbs
-    const double d = distance.norm(); 
+    const double d =
+        getContactDistance(ctl_, robot_indx, robot_limb, limb).norm(); // gets distance for the r/h pair and the limbs
+    
 
     if(d < min_d)
     {
@@ -657,7 +657,7 @@ const biRobotTeleop::Limbs ForceTransmissionLocal::getContactLimb(mc_control::fs
 
 /// @brief Given a robot (1 or 2), computes the distance between this robot's limb and the limb of the human it's
 /// interacting with. Also registers the closest point on the robot for this limb
-std::tuple<const Eigen::Vector3d,const Eigen::Vector3d, const Eigen::Vector3d>  ForceTransmissionLocal::getContactDistance(mc_control::fsm::Controller & ctl_,
+std::tuple<const Eigen::Vector3d,const Eigen::Vector3d, const Eigen::Vector3d>  ForceTransmissionLocal::getDistanceAndContactPoint(mc_control::fsm::Controller & ctl_,
                                                                  const int robot_indx,
                                                                  const biRobotTeleop::Limbs limb_robot,
                                                                  const biRobotTeleop::Limbs limb_human)
@@ -687,16 +687,37 @@ std::tuple<const Eigen::Vector3d,const Eigen::Vector3d, const Eigen::Vector3d>  
 
   auto test = pair_limb_frame.getVector(); // normale
 
-  mc_rtc::log::info("last direction {}", test);
+  
 
   Eigen::Vector3d normal_dir;
   normal_dir <<test.m_x, test.m_y, test.m_z;
+  normal_dir = normal_dir * (1/normal_dir.norm());
 
-  auto limb_dir = robot.bodyPosW(link_name).rotation()[2];
+  mc_rtc::log::info("last direction {}", normal_dir);
 
-  mc_rtc::log::info("limb_dir {}", limb_dir);
+  auto limb_rot = robot.bodyPosW(link_name).rotation();
 
-  // auto tangential_dir = normal_dir.cross(limb_dir).cross(normal_dir);
+  Eigen::Vector3d limb_dir;
+  limb_dir << limb_rot(6), limb_rot(7), limb_rot(8);  //pas normalise ??
+
+  auto tangential_dir = normal_dir.cross(limb_dir).cross(normal_dir);
+
+  auto third_dir = normal_dir.cross(tangential_dir);
+
+  // sva::matrix3_t contact_point_rotation = ;
+
+  Eigen::Matrix3d contact_point_rotation {
+      {normal_dir(0), normal_dir(1), normal_dir(2)},
+      {tangential_dir(0), tangential_dir(1), tangential_dir(2)},
+      {third_dir(0), third_dir(1), third_dir(2)},};
+
+      mc_rtc::log::info("transpose \n{} ", contact_point_rotation.transpose()*contact_point_rotation);
+  mc_rtc::log::info("contact_point_rot \n{}", contact_point_rotation);
+
+
+
+  mc_rtc::log::info("limb_dir for {} \n {}  \n {} {} {}", link_name, limb_dir(6), limb_dir(7), limb_dir(8));
+
 
   Eigen::Vector3d robot_point;
   robot_point << p2.m_x, p2.m_y, p2.m_z;
@@ -726,6 +747,41 @@ std::tuple<const Eigen::Vector3d,const Eigen::Vector3d, const Eigen::Vector3d>  
   Eigen::Vector3d out;
   out << p1[0] - p2[0], p1[1] - p2[1], p1[2] - p2[2];
   return {robot_point ,human_point,out};
+}
+
+
+
+const Eigen::Vector3d ForceTransmissionLocal::getContactDistance(mc_control::fsm::Controller & ctl_,
+                                                                 const int robot_indx,
+                                                                 const biRobotTeleop::Limbs limb_robot,
+                                                                 const biRobotTeleop::Limbs limb_human)
+{
+  auto & ctl = static_cast<BiRobotTeleoperation &>(ctl_);
+  const std::string robot_name = "robot_" + std::to_string(robot_indx);
+  const auto & robot = ctl.robot(robot_name);
+  const auto rp = robot_indx == 1 ? ctl.r_1_ : ctl.r_2_; // robot pose
+  const auto h = ctl.getHumanPose(robot_indx == 1 ? 1 : 0); // c'est human 1 et robot 2 par exemple
+  // paire H/R en interaction
+
+  auto human_cvx = h.getConvex(limb_human, *human_1_estimated_);
+
+  if(robot_indx == 1)
+  {
+    human_cvx = h.getConvex(limb_human, *human_2_estimated_);
+  }
+
+  const auto link_name = rp.getName(limb_robot);
+
+  const auto & robot_cvx = robot.convex(rp.getConvexName(limb_robot));
+
+  sch::CD_Pair pair_limb_frame(human_cvx.get(), robot_cvx.second.get());
+
+  sch::Point3 p1, p2;
+  pair_limb_frame.getClosestPoints(p1, p2);
+
+  Eigen::Vector3d out;
+  out << p1[0] - p2[0], p1[1] - p2[1], p1[2] - p2[2];
+  return out;
 }
 
 sva::ForceVecd ForceTransmissionLocal::transformExternalWrench(mc_control::fsm::Controller & ctl_,const sva::ForceVecd wrench,

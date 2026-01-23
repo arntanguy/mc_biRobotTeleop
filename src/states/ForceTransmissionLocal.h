@@ -8,6 +8,7 @@
 #include <mc_tasks/DampingTask.h>
 #include <mc_tasks/TransformTask.h>
 #include <eigen3/Eigen/Core>
+#include <Eigen/Dense>
 
 #include <biRobotTeleop/HumanRobotPose.h>
 #include <biRobotTeleop/type.h>
@@ -57,10 +58,15 @@ struct ForceTransmissionLocal : mc_control::fsm::State
    * @param limb_human
    * @return Eigen::Vector3d
    */
-  std::tuple<const Eigen::Vector3d,const Eigen::Vector3d, const Eigen::Vector3d>  getContactDistance(mc_control::fsm::Controller & ctl_,
+  std::tuple<const Eigen::Vector3d,const Eigen::Vector3d, const Eigen::Vector3d>  getDistanceAndContactPoint(mc_control::fsm::Controller & ctl_,
                                            const int robot_indx,
                                            const biRobotTeleop::Limbs limb_robot,
                                            const biRobotTeleop::Limbs limb_human);
+
+  const Eigen::Vector3d getContactDistance(mc_control::fsm::Controller & ctl_,
+                                                                 const int robot_indx,
+                                                                 const biRobotTeleop::Limbs limb_robot,
+                                                                 const biRobotTeleop::Limbs limb_human);
 
   bool checkActivation(mc_control::fsm::Controller & ctl_, const int robot_indx);
 

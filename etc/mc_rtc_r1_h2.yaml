@@ -80,7 +80,6 @@ ObserverPipelines:
       cutoff: 0.02
       anchorFrame:
         maxAnchorFrameDiscontinuity: 0.02
-
   - type: MCKineticsObserver
     name: MCKineticsObserver_1
     update: true
@@ -98,7 +97,6 @@ ObserverPipelines:
     name: Encoder_2
     robot: robot_2
     update_robot: robot_2
-
   - type: Attitude
     name: Attitude_2
     robot: robot_2
@@ -124,4 +122,3 @@ ObserverPipelines:
     exportValue:
       exportContactWrench: true
       exportExternalWrench: true
-

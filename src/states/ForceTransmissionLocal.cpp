@@ -117,23 +117,25 @@ bool ForceTransmissionLocal::run(mc_control::fsm::Controller & ctl_)
   }
   // if((active_force_measurement_->eval().vector().norm() < force_activation_threshold_ ||
   //     d_a > deactivation_threshold_) && !activation_enforced_)
-  if((d_a > deactivation_threshold_))
-  {
-    mc_rtc::log::info("[{}] Contact has been broken, deactivate force control\nd_a {} d_b {}", name(), d_a, d_b);
-    auto & frame = task_b_->frame();
-    ctl.solver().removeTask(task_a_);
-    ctl.solver().removeTask(task_b_);
-    if(active_force_measurement_ != nullptr) // filtered wrench value on robot A's limb (limb_a_)
-    {
-      active_force_measurement_->reset(sva::ForceVecd::Zero());
-      active_force_measurement_ = nullptr;
-    }
-    contact_limb_ = "None";
-    indx_ = 0;
-    // activation_enforced_ = false;
-    active_ = false;
-    return true;
-  }
+
+  //TODO uncomment me
+  // if((d_a > deactivation_threshold_))
+  // {
+  //   mc_rtc::log::info("[{}] Contact has been broken, deactivate force control\nd_a {} d_b {}", name(), d_a, d_b);
+  //   auto & frame = task_b_->frame();
+  //   ctl.solver().removeTask(task_a_);
+  //   ctl.solver().removeTask(task_b_);
+  //   if(active_force_measurement_ != nullptr) // filtered wrench value on robot A's limb (limb_a_)
+  //   {
+  //     active_force_measurement_->reset(sva::ForceVecd::Zero());
+  //     active_force_measurement_ = nullptr;
+  //   }
+  //   contact_limb_ = "None";
+  //   indx_ = 0;
+  //   // activation_enforced_ = false;
+  //   active_ = false;
+  //   return true;
+  // }
 
   // sva::ForceVecd measured_wrench_a;
   // sva::ForceVecd measured_wrench_b;
@@ -190,6 +192,8 @@ bool ForceTransmissionLocal::run(mc_control::fsm::Controller & ctl_)
         sva::PTransformd(h_b.getOffset(limb_b_) * h_b.getPose(limb_b_).rotation())
         * sva::PTransformd(X_0_centroid.rotation()).inv(); // TRANSFORMATION BW limb a and fb of robot b
 
+    mc_rtc::log::info("offset transation {}", h_b.getOffset(limb_b_).translation());
+
     const auto X_0_frame = task_a_->frame().position();
 
     auto wrench_fb = ctl.getCalibratedExtWrench(ctl.realRobot(robot_a_name_));
@@ -211,9 +215,9 @@ bool ForceTransmissionLocal::run(mc_control::fsm::Controller & ctl_)
     //   measured_wrench_b = (X_0_frame * X_0_fb.inv()).dualMul( fake_wrench  );
     // }
 
-    mc_rtc::log::info("robot a is {}, measured wrench at fb is \n {}\nat centroid \n{}\n with centroid transform\n{}",
+    mc_rtc::log::info("robot a is {}, measured wrench at fb is \n {}\nat centroid \n{}\n with centroid transform\n{}, centroid moment {}",
                       robot_a_name_, measured_wrench_a, measured_wrench_a_centroid,
-                      measured_wrench_a_centroid_trasnform);
+                      measured_wrench_a_centroid_trasnform, wrench_fb_centroid.couple());
 
     const auto fs_indx = robot_a.data()->forceSensorsIndex.at(robot_a_custom_force_sensor_name_);
     robot_a.data()->forceSensors[fs_indx].wrench(measured_wrench_a);
@@ -225,6 +229,10 @@ bool ForceTransmissionLocal::run(mc_control::fsm::Controller & ctl_)
     measured_wrench_b = task_b_->frame().wrench();
 
     mc_rtc::log::info("robot {} has a force sensor named {}", robot_b_name_, task_b_->frame().forceSensor().name());
+
+
+    mc_rtc::log::info("offset transation {}", h_b.getOffset(limb_b_).translation());
+
   }
   else
   {
@@ -260,6 +268,8 @@ bool ForceTransmissionLocal::run(mc_control::fsm::Controller & ctl_)
     // transformation between the limb of task b and limb a of human  * transformation (only rot) bw limb a and fb of robot b
 
     // h_a.getOffset(limb_a_) * h_a.getPose(limb_a_) * task_b_->frame().position().inv();
+
+    mc_rtc::log::info("offset transation {}", h_b.getOffset(limb_b_).translation());
 
     measured_wrench_b_centroid =
         (X_f_contactF_b.inv() * R_centroid_limb_a)
@@ -299,6 +309,8 @@ bool ForceTransmissionLocal::run(mc_control::fsm::Controller & ctl_)
   const sva::ForceVecd targetWrench_a = (X_f_contactF_a.inv() * robot_b_pose.getOffset(limb_b_))
                                             .dualMul(-measured_wrench_b); // measured wrench b at frame b
   // but moved to
+
+  mc_rtc::log::info("robot_b_pose.getOffset(limb_b_) {}", robot_b_pose.getOffset(limb_b_));
 
   task_a_->targetWrench(targetWrench_a);
   task_b_->targetWrench(targetWrench_b);

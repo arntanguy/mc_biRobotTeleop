@@ -7,6 +7,7 @@
 #include <mc_tasks/AdmittanceTask.h>
 #include <mc_tasks/DampingTask.h>
 #include <mc_tasks/TransformTask.h>
+#include <eigen3/Eigen/Core>
 
 #include <biRobotTeleop/HumanRobotPose.h>
 #include <biRobotTeleop/type.h>
@@ -56,7 +57,7 @@ struct ForceTransmissionLocal : mc_control::fsm::State
    * @param limb_human
    * @return Eigen::Vector3d
    */
-  const Eigen::Vector3d getContactDistance(mc_control::fsm::Controller & ctl_,
+  std::tuple<const Eigen::Vector3d,const Eigen::Vector3d, const Eigen::Vector3d>  getContactDistance(mc_control::fsm::Controller & ctl_,
                                            const int robot_indx,
                                            const biRobotTeleop::Limbs limb_robot,
                                            const biRobotTeleop::Limbs limb_human);
@@ -68,7 +69,7 @@ struct ForceTransmissionLocal : mc_control::fsm::State
   sva::ForceVecd replaceForceTorque(sva::ForceVecd target);
   void getestimatedContactWrench(mc_control::fsm::Controller & ctl_, const std::string & surface);
 
-  sva::ForceVecd transformExternalWrench(const sva::ForceVecd wrench,
+  sva::ForceVecd transformExternalWrench(mc_control::fsm::Controller & ctl_,const sva::ForceVecd wrench,
                                          const biRobotTeleop::Limbs limb_robot,
                                          int rIndex);
   sva::ForceVecd transformExternalWrench(const sva::ForceVecd wrench,
@@ -210,10 +211,12 @@ private:
   // sva::ForceVecd estimatedExternalWrench_centroid_bias_;
 
   std::vector<accumulator_t> accumulator_1_;
-  std::unordered_map<int, sva::PTransformd> closests_points_robot_1_;
+  std::unordered_map<int, Eigen::Vector3d> closests_points_robot_1_;
 
   std::vector<accumulator_t> accumulator_2_;
-  std::unordered_map<int, sva::PTransformd> closests_points_robot_2_;
+  std::unordered_map<int, Eigen::Vector3d> closests_points_robot_2_;
+
+  Eigen::Vector3d closest_point_;
 
   // ba::accumulator_set<std::vector<double>, ba::stats<ba::tag::rolling_mean>>  acc_of_vectors_;
 };

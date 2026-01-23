@@ -66,10 +66,16 @@ void ForceTransmissionLocal::start(mc_control::fsm::Controller & ctl_)
   for(int it = biRobotTeleop::Head; it <= biRobotTeleop::RightArm; it++)
   {
     biRobotTeleop::Limbs limb = static_cast<biRobotTeleop::Limbs>(it);
-    closests_points_robot_2_[it] = sva::PTransformd::Identity();
-    closests_points_robot_1_[it] = sva::PTransformd::Identity();
+    closests_points_robot_2_[it] = Eigen::Vector3d::Zero();
   }
 
+  for(int it = biRobotTeleop::Head; it <= biRobotTeleop::RightArm; it++)
+  {
+    biRobotTeleop::Limbs limb = static_cast<biRobotTeleop::Limbs>(it);
+    closests_points_robot_1_[it] = Eigen::Vector3d::Zero();
+  }
+
+  closest_point_ = Eigen::Vector3d::Zero();
   dt_ = ctl.timeStep;
 
   addGUI(ctl_);
@@ -94,8 +100,12 @@ bool ForceTransmissionLocal::run(mc_control::fsm::Controller & ctl_)
   output("OK");
 
   // for (int i=0; i< closests_points_robot_1_.size(); i++){
-  //   mc_rtc::log::info("key {} and address {}, ", i,(void*)&closests_points_robot_1_[i]);
+  //   mc_rtc::log::info("key for 1 {} and address {}, value \n{}", i,(void*)&closests_points_robot_1_[i], closests_points_robot_1_[i]);
   // }  // TODO problem with closests_points
+
+  // for (int i=0; i< closests_points_robot_2_.size(); i++){
+  //   mc_rtc::log::info("key for 2 {} and address {}, value \n{}", i,(void*)&closests_points_robot_2_[i], closests_points_robot_2_[i]);
+  // }  
 
   if(!active_) // if not active, look if the force sensors measure a contact or if distance is close enough
   {
@@ -108,8 +118,15 @@ bool ForceTransmissionLocal::run(mc_control::fsm::Controller & ctl_)
   }
 
   std::cout << " just checking the distance guys ! \n";
-  double d_b = getContactDistance(ctl_, indx_, limb_a_, limb_b_).norm(); // robot A human B
-  double d_a = getContactDistance(ctl_, indx_ == 1 ? 2 : 1, limb_b_, limb_a_).norm(); // robot B human A
+  auto [closest_point_ra, human_pointa, distance_b] = getContactDistance(ctl_, indx_, limb_a_, limb_b_); // robot A human B
+  double d_b = distance_b.norm();
+  auto [closest_point_rb ,human_pointb, distance_a] = getContactDistance(ctl_, indx_ == 1 ? 2 : 1, limb_b_, limb_a_); // robot B human A
+  double d_a = distance_a.norm();
+ 
+
+  mc_rtc::log::info("cloests robot a on limb {} : {} and human {}", limb_a_, closest_point_ra.transpose(), human_pointa.transpose()  );
+  mc_rtc::log::info("cloests robot b on limb {} : {} and human {}", limb_b_, closest_point_rb.transpose(), human_pointb.transpose()  );
+  mc_rtc::log::info("d_a {} d_b {}",  d_a, d_b);
 
   if(active_force_measurement_ != nullptr) // filtered wrench value on robot A's limb (limb_a_)
   {
@@ -119,23 +136,23 @@ bool ForceTransmissionLocal::run(mc_control::fsm::Controller & ctl_)
   //     d_a > deactivation_threshold_) && !activation_enforced_)
 
   //TODO uncomment me
-  // if((d_a > deactivation_threshold_))
-  // {
-  //   mc_rtc::log::info("[{}] Contact has been broken, deactivate force control\nd_a {} d_b {}", name(), d_a, d_b);
-  //   auto & frame = task_b_->frame();
-  //   ctl.solver().removeTask(task_a_);
-  //   ctl.solver().removeTask(task_b_);
-  //   if(active_force_measurement_ != nullptr) // filtered wrench value on robot A's limb (limb_a_)
-  //   {
-  //     active_force_measurement_->reset(sva::ForceVecd::Zero());
-  //     active_force_measurement_ = nullptr;
-  //   }
-  //   contact_limb_ = "None";
-  //   indx_ = 0;
-  //   // activation_enforced_ = false;
-  //   active_ = false;
-  //   return true;
-  // }
+  if((d_a > deactivation_threshold_))
+  {
+    mc_rtc::log::info("[{}] Contact has been broken, deactivate force control\nd_a {} d_b {}", name(), d_a, d_b);
+    auto & frame = task_b_->frame();
+    ctl.solver().removeTask(task_a_);
+    ctl.solver().removeTask(task_b_);
+    if(active_force_measurement_ != nullptr) // filtered wrench value on robot A's limb (limb_a_)
+    {
+      active_force_measurement_->reset(sva::ForceVecd::Zero());
+      active_force_measurement_ = nullptr;
+    }
+    contact_limb_ = "None";
+    indx_ = 0;
+    // activation_enforced_ = false;
+    active_ = false;
+    return true;
+  }
 
   // sva::ForceVecd measured_wrench_a;
   // sva::ForceVecd measured_wrench_b;
@@ -364,8 +381,9 @@ bool ForceTransmissionLocal::checkActivation(mc_control::fsm::Controller & ctl_,
     {
       const auto limb_i = static_cast<biRobotTeleop::Limbs>(i);
       // const auto frame_b_i = robot_b_pose.getName(limb_i);
-      const double d = getContactDistance(ctl_, robot_indx == 1 ? 2 : 1, limb_i, fs_limb_a)
-                           .norm(); // contact distance for the pair h/r B and the considered limbs
+      auto [_,__,distance] = getContactDistance(ctl_, robot_indx == 1 ? 2 : 1, limb_i, fs_limb_a);
+                            // contact distance for the pair h/r B and the considered limbs
+      const double d = distance.norm();          
       min_d = std::min(d, min_d);
     } // loops on the other pair B and gets the closest distance between the fs limb (here of the human controlling
       // robot A) and all the robot limbs
@@ -512,8 +530,10 @@ bool ForceTransmissionLocal::checkActivationTest(mc_control::fsm::Controller & c
         continue;
       }
       // const auto frame_b_i = robot_b_pose.getName(limb_i);
-      const double d = getContactDistance(ctl_, robot_indx == 1 ? 2 : 1, limb_i, limb_a)
-                           .norm(); // contact distance for the pair h/r B and the considered limbs
+      auto [_,__,distance] = getContactDistance(ctl_, robot_indx == 1 ? 2 : 1, limb_i, limb_a);
+                           // contact distance for the pair h/r B and the considered limbs
+      const double d = distance.norm(); 
+
       min_d = std::min(d, min_d);
     } // loops on the other pair B and gets the closest distance between the fs limb (here of the human controlling
       // robot A) and all the robot limbs
@@ -621,8 +641,9 @@ const biRobotTeleop::Limbs ForceTransmissionLocal::getContactLimb(mc_control::fs
       continue;
     }
 
-    const auto d =
-        getContactDistance(ctl_, robot_indx, robot_limb, limb).norm(); // gets distance for the r/h pair and the limbs
+    auto [_,__,distance] =
+        getContactDistance(ctl_, robot_indx, robot_limb, limb); // gets distance for the r/h pair and the limbs
+    const double d = distance.norm(); 
 
     if(d < min_d)
     {
@@ -636,7 +657,7 @@ const biRobotTeleop::Limbs ForceTransmissionLocal::getContactLimb(mc_control::fs
 
 /// @brief Given a robot (1 or 2), computes the distance between this robot's limb and the limb of the human it's
 /// interacting with. Also registers the closest point on the robot for this limb
-const Eigen::Vector3d ForceTransmissionLocal::getContactDistance(mc_control::fsm::Controller & ctl_,
+std::tuple<const Eigen::Vector3d,const Eigen::Vector3d, const Eigen::Vector3d>  ForceTransmissionLocal::getContactDistance(mc_control::fsm::Controller & ctl_,
                                                                  const int robot_indx,
                                                                  const biRobotTeleop::Limbs limb_robot,
                                                                  const biRobotTeleop::Limbs limb_human)
@@ -664,52 +685,78 @@ const Eigen::Vector3d ForceTransmissionLocal::getContactDistance(mc_control::fsm
   sch::Point3 p1, p2;
   pair_limb_frame.getClosestPoints(p1, p2);
 
+  auto test = pair_limb_frame.getVector(); // normale
+
+  mc_rtc::log::info("last direction {}", test);
+
+  Eigen::Vector3d normal_dir;
+  normal_dir <<test.m_x, test.m_y, test.m_z;
+
+  auto limb_dir = robot.bodyPosW(link_name).rotation()[2];
+
+  mc_rtc::log::info("limb_dir {}", limb_dir);
+
+  // auto tangential_dir = normal_dir.cross(limb_dir).cross(normal_dir);
+
   Eigen::Vector3d robot_point;
   robot_point << p2.m_x, p2.m_y, p2.m_z;
 
+  Eigen::Vector3d human_point;
+  human_point << p1.m_x, p1.m_y, p1.m_z;
+
+
   sva::PTransformd X_0_robot_link = rp.getOffset(limb_robot) * robot.bodyPosW(link_name);
 
-  // mc_rtc::log::info("limb \n{}   size of map {}", limb_robot, closests_points_robot_1_.size() );
-  // for (int i=0; i< closests_points_robot_2_.size(); i++){
+  sva::PTransformd tempura = sva::PTransformd(X_0_robot_link.rotation(), robot_point) ; //* X_0_robot_link.inv()  
 
-  //   mc_rtc::log::info("key {} and address {}, ", i,(void*)&closests_points_robot_1_[i]);
+  // mc_rtc::log::info("robot {} link {}, human point {}, robot point {}", robot_indx, limb_robot, human_point.transpose(),robot_point.transpose());
+
+  closest_point_ = robot_point;
+
+
+  // if(robot_indx == 1)
+  // {
+  //   closests_points_robot_1_[limb_robot] = robot_point;
   // }
-
-  if(robot_indx == 1)
-  {
-    // closests_points_robot_1_[limb_robot] =
-    //     sva::PTransformd(X_0_robot_link.rotation(), robot_point) * X_0_robot_link.inv();
-  }
-  else if(robot_indx == 2)
-  {
-    // closests_points_robot_2_[limb_robot] =
-    //     sva::PTransformd(X_0_robot_link.rotation(), robot_point) * X_0_robot_link.inv();
-  }
+  // else if(robot_indx == 2)
+  // {
+  //   closests_points_robot_2_[limb_robot] = robot_point;
+  // }
 
   Eigen::Vector3d out;
   out << p1[0] - p2[0], p1[1] - p2[1], p1[2] - p2[2];
-  return out;
+  return {robot_point ,human_point,out};
 }
 
-// sva::ForceVecd ForceTransmissionLocal::transformExternalWrench(const sva::ForceVecd wrench,
-//                                                                const biRobotTeleop::Limbs limb_robot,
-//                                                                int rIndex)
-// {
-//   sva::PTransformd X_0_surface = closests_points_robot_1_[limb_robot]; // ^surface X_0
-//   if(rIndex == 2)
-//   {
-//     X_0_surface = closests_points_robot_2_[limb_robot];
-//   }
+sva::ForceVecd ForceTransmissionLocal::transformExternalWrench(mc_control::fsm::Controller & ctl_,const sva::ForceVecd wrench,
+                                                               const biRobotTeleop::Limbs limb_robot,
+                                                               int rIndex)
+{
 
-//   // task_b_->frame().position();
-//   sva::PTransformd X_0_centroid = worldCentroidKinePTrans_[rIndex - 1]; // ^controid X_0
+  auto & ctl = static_cast<BiRobotTeleoperation &>(ctl_);
+  const std::string robot_name = "robot_" + std::to_string(rIndex);
+  const auto & robot = ctl.robot(robot_name);
+  const auto rp = rIndex == 1 ? ctl.r_1_ : ctl.r_2_; // robot pose
+  const auto link_name = rp.getName(limb_robot);
+  
+  sva::PTransformd X_0_robot_link = rp.getOffset(limb_robot) * robot.bodyPosW(link_name);
 
-//   sva::PTransformd X_surface_com = X_0_surface * X_0_centroid.inv();
+  Eigen::Vector3d robot_point = closests_points_robot_1_[limb_robot]; // ^surface X_0
+  sva::PTransformd X_0_surface = sva::PTransformd(X_0_robot_link.rotation(), robot_point) ;
+  if(rIndex == 2)
+  {
+    robot_point = closests_points_robot_2_[limb_robot];
+  }
 
-//   sva::ForceVecd wrench_out = X_surface_com.dualMul(wrench);
+  // task_b_->frame().position();
+  sva::PTransformd X_0_centroid = worldCentroidKinePTrans_[rIndex - 1]; // ^controid X_0
 
-//   return wrench_out;
-// }
+  sva::PTransformd X_surface_com = X_0_surface * X_0_centroid.inv();
+
+  sva::ForceVecd wrench_out = X_surface_com.dualMul(wrench);
+
+  return wrench_out;
+}
 
 sva::ForceVecd ForceTransmissionLocal::transformExternalWrench(const sva::ForceVecd wrench,
                                                                const biRobotTeleop::Limbs limb_robot,

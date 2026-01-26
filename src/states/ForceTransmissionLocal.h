@@ -58,7 +58,7 @@ struct ForceTransmissionLocal : mc_control::fsm::State
    * @param limb_human
    * @return Eigen::Vector3d
    */
-  std::tuple<const Eigen::Vector3d,const Eigen::Vector3d, const Eigen::Vector3d>  getDistanceAndContactPoint(mc_control::fsm::Controller & ctl_,
+  std::tuple<const Eigen::Vector3d,const Eigen::Vector3d, const Eigen::Vector3d, const Eigen::Matrix3d>  getDistanceAndContactPoint(mc_control::fsm::Controller & ctl_,
                                            const int robot_indx,
                                            const biRobotTeleop::Limbs limb_robot,
                                            const biRobotTeleop::Limbs limb_human);
@@ -73,7 +73,7 @@ struct ForceTransmissionLocal : mc_control::fsm::State
   bool checkActivationTest(mc_control::fsm::Controller & ctl_, const int robot_indx);
 
   sva::ForceVecd replaceForceTorque(sva::ForceVecd target);
-  void getestimatedContactWrench(mc_control::fsm::Controller & ctl_, const std::string & surface);
+
 
   sva::ForceVecd transformExternalWrench(mc_control::fsm::Controller & ctl_,const sva::ForceVecd wrench,
                                          const biRobotTeleop::Limbs limb_robot,
@@ -178,8 +178,10 @@ struct ForceTransmissionLocal : mc_control::fsm::State
   std::vector<std::string> force_sensor_limbs_robot_1_;
   std::vector<std::string> force_sensor_limbs_robot_2_;
 
-  sva::ForceVecd measured_wrench_a = sva::ForceVecd::Zero(); // measured force in the link frame
-  sva::ForceVecd measured_wrench_b = sva::ForceVecd::Zero(); // measured force in the link frame
+  sva::ForceVecd measured_wrench_a_contact = sva::ForceVecd::Zero(); // measured force at contact point
+  sva::ForceVecd measured_wrench_b_contact = sva::ForceVecd::Zero(); // measured force at contact point
+  sva::ForceVecd measured_wrench_at_task_frame_a = sva::ForceVecd::Zero(); // measured force in the link frame
+  sva::ForceVecd measured_wrench_at_task_frame_b = sva::ForceVecd::Zero(); // measured force in the link frame
   sva::ForceVecd measured_wrench_a_centroid = sva::ForceVecd::Zero(); // measured force in the link frame
   sva::ForceVecd measured_wrench_b_centroid = sva::ForceVecd::Zero(); // measured force in the link frame
   sva::ForceVecd measured_wrench_b_centroid_trasnform = sva::ForceVecd::Zero(); // measured force in the link frame

@@ -118,9 +118,9 @@ bool ForceTransmissionLocal::run(mc_control::fsm::Controller & ctl_)
   }
 
   std::cout << " just checking the distance guys ! \n";
-  auto [closest_point_ra ,human_pointa, distance_b] = getDistanceAndContactPoint(ctl_, indx_, limb_a_, limb_b_); // robot A human B
+  auto [closest_point_ra ,human_pointa, distance_b, rot_contact_point_a] = getDistanceAndContactPoint(ctl_, indx_, limb_a_, limb_b_); // robot A human B
   double d_b  =distance_b.norm();
-  auto [closest_point_rb ,human_pointb, distance_a] = getDistanceAndContactPoint(ctl_, indx_ == 1 ? 2 : 1, limb_b_, limb_a_); // robot B human A
+  auto [closest_point_rb ,human_pointb, distance_a, rot_contact_point_b] = getDistanceAndContactPoint(ctl_, indx_ == 1 ? 2 : 1, limb_b_, limb_a_); // robot B human A
   double d_a = distance_a.norm();
  
 
@@ -136,23 +136,23 @@ bool ForceTransmissionLocal::run(mc_control::fsm::Controller & ctl_)
   //     d_a > deactivation_threshold_) && !activation_enforced_)
 
   //TODO uncomment me
-  if((d_a > deactivation_threshold_))
-  {
-    mc_rtc::log::info("[{}] Contact has been broken, deactivate force control\nd_a {} d_b {}", name(), d_a, d_b);
-    auto & frame = task_b_->frame();
-    ctl.solver().removeTask(task_a_);
-    ctl.solver().removeTask(task_b_);
-    if(active_force_measurement_ != nullptr) // filtered wrench value on robot A's limb (limb_a_)
-    {
-      active_force_measurement_->reset(sva::ForceVecd::Zero());
-      active_force_measurement_ = nullptr;
-    }
-    contact_limb_ = "None";
-    indx_ = 0;
-    // activation_enforced_ = false;
-    active_ = false;
-    return true;
-  }
+  // if((d_a > deactivation_threshold_))
+  // {
+  //   mc_rtc::log::info("[{}] Contact has been broken, deactivate force control\nd_a {} d_b {}", name(), d_a, d_b);
+  //   auto & frame = task_b_->frame();
+  //   ctl.solver().removeTask(task_a_);
+  //   ctl.solver().removeTask(task_b_);
+  //   if(active_force_measurement_ != nullptr) // filtered wrench value on robot A's limb (limb_a_)
+  //   {
+  //     active_force_measurement_->reset(sva::ForceVecd::Zero());
+  //     active_force_measurement_ = nullptr;
+  //   }
+  //   contact_limb_ = "None";
+  //   indx_ = 0;
+  //   // activation_enforced_ = false;
+  //   active_ = false;
+  //   return true;
+  // }
 
   // sva::ForceVecd measured_wrench_a;
   // sva::ForceVecd measured_wrench_b;
@@ -168,13 +168,58 @@ bool ForceTransmissionLocal::run(mc_control::fsm::Controller & ctl_)
       h_a.getOffset(limb_a_) * h_a.getPose(limb_a_)
       * task_b_->frame().position().inv(); // transformation between human limb a and the limb of task b
 
-  // mc_rtc::log::info("getOffsetGetPose \n{} \n frame position \n{}", task_a_->frame().position())
+  
+
+
+  /////////////////robot A
+
+
+  // if the link is not equipped with F/T sensing, we use an estimator that will set the global estimatied force in
+  // the mbc at the fb (floating base ?)
+
+  const mc_rbdyn::Robot & robot_a = ctl.robot(robot_a_name_);
+
+  getestimatedExternalWrench(ctl_, robot_a_name_, indx_);
+  calculateMovingAverage(indx_);
+
+  const auto X_0_centroid_a = worldCentroidKinePTrans_[indx_ - 1];
+
+  const auto R_centroid_limb_b =
+      sva::PTransformd(h_b.getOffset(limb_b_) * h_b.getPose(limb_b_).rotation())
+      * sva::PTransformd(X_0_centroid_a.rotation()).inv(); // TRANSFORMATION BW limb a and fb of robot b
+
+  const auto R_centroid_contact_a =
+      sva::PTransformd(rot_contact_point_a)
+      * sva::PTransformd(X_0_centroid_a.rotation()).inv(); // rotation from centroid to contact point frame
+
+  const auto X_0_contact_a = sva::PTransformd(rot_contact_point_a, closest_point_ra);
+
+  const auto X_0_frame_a = task_a_->frame().position();
+
+  auto wrench_fb_centroid_a = estimatedExternalWrench_centroid_without_bias_[indx_ - 1];
+
+
+  measured_wrench_a_contact  = R_centroid_contact_a.dualMul(sva::ForceVecd(Eigen::Vector3d::Zero(), wrench_fb_centroid_a.force()));
+  measured_wrench_at_task_frame_a = (X_0_frame_a * X_0_contact_a.inv()).dualMul(measured_wrench_a_contact);
+
+  measured_wrench_a_centroid =
+      (X_f_contactF_a.inv() * R_centroid_limb_b)
+          .dualMul(sva::ForceVecd(Eigen::Vector3d::Zero(), wrench_fb_centroid_a.force()));
+
+  measured_wrench_a_centroid_trasnform =
+      transformExternalWrench(estimatedExternalWrench_centroid_without_bias_[indx_ - 1], limb_b_, indx_, X_0_frame_a);
+
+  
+  mc_rtc::log::info("robot a is {}, measured wrench at contact is \n {}\n  measured_wrench_at_task_frame_a\n{} \n directly from centroid \n{}\n with my transform \n{}",
+                robot_a_name_, measured_wrench_a_contact,
+                measured_wrench_at_task_frame_a, measured_wrench_a_centroid, measured_wrench_a_centroid_trasnform);
 
   if(task_a_->frame().hasForceSensor() && task_a_->frame().forceSensor().name() != robot_a_custom_force_sensor_name_)
   {
-    measured_wrench_a = task_a_->frame().wrench();
+    auto measured_a_fs = task_a_->frame().wrench();
+    // measured_wrench_at_task_frame_a = measured_a_fs;
+     mc_rtc::log::info("robot a {} has a force sensor named {}\n wrench at fs\n{}", robot_a_name_, task_a_->frame().forceSensor().name(), measured_a_fs);
 
-    // w = ctl_.robots().robot(robot_name).frame(f).wrench(); la mm chose ??
     if(activation_enforced_)
     {
       std::cout << "what are you doing here bro??\n";
@@ -189,130 +234,75 @@ bool ForceTransmissionLocal::run(mc_control::fsm::Controller & ctl_)
   else
   {
     mc_rtc::log::info("robot {} does not have a force sensor ", robot_a_name_);
-
-    // if the link is not equipped with F/T sensing, we use an estimator that will set the global estimatied force in
-    // the mbc at the fb (floating base ?)
-
-    const mc_rbdyn::Robot & robot_a = ctl.robot(robot_a_name_);
-    const auto X_0_fb = ctl.robot(robot_a_name_).posW();
-
-    getestimatedExternalWrench(ctl_, robot_a_name_, indx_);
-    calculateMovingAverage(indx_);
-
-    const auto X_0_centroid = worldCentroidKinePTrans_[indx_ - 1];
-
-    const auto R_fb_limb_b =
-        sva::PTransformd(h_a.getOffset(limb_b_) * h_a.getPose(limb_b_).rotation())
-        * sva::PTransformd(X_0_fb.rotation()).inv(); // TRANSFORMATION BW limb a of human and fb of robot b
-
-    const auto R_centroid_limb_b =
-        sva::PTransformd(h_b.getOffset(limb_b_) * h_b.getPose(limb_b_).rotation())
-        * sva::PTransformd(X_0_centroid.rotation()).inv(); // TRANSFORMATION BW limb a and fb of robot b
-
-    mc_rtc::log::info("offset transation {}", h_b.getOffset(limb_b_).translation());
-
-    const auto X_0_frame = task_a_->frame().position();
-
-    auto wrench_fb = ctl.getCalibratedExtWrench(ctl.realRobot(robot_a_name_));
-    auto wrench_fb_centroid = estimatedExternalWrench_centroid_without_bias_[indx_ - 1];
-
-    measured_wrench_a =
-        (X_f_contactF_a.inv() * R_fb_limb_b).dualMul(sva::ForceVecd(Eigen::Vector3d::Zero(), wrench_fb.force()));
-
-    measured_wrench_a_centroid =
-        (X_f_contactF_a.inv() * R_centroid_limb_b)
-            .dualMul(sva::ForceVecd(Eigen::Vector3d::Zero(), wrench_fb_centroid.force()));
-
-    measured_wrench_a_centroid_trasnform =
-        transformExternalWrench(estimatedExternalWrench_centroid_without_bias_[indx_ - 1], limb_b_, indx_, X_0_frame);
-
-    // if(activation_enforced_)
-    // {
-    //   const sva::ForceVecd fake_wrench = 0*sva::ForceVecd(Eigen::Vector3d::Zero(),Eigen::Vector3d{0,-10,-10});
-    //   measured_wrench_b = (X_0_frame * X_0_fb.inv()).dualMul( fake_wrench  );
-    // }
-
-    mc_rtc::log::info("robot a is {}, measured wrench at fb is \n {}\nat centroid \n{}\n with centroid transform\n{}, centroid moment {}",
-                      robot_a_name_, measured_wrench_a, measured_wrench_a_centroid,
-                      measured_wrench_a_centroid_trasnform, wrench_fb_centroid.couple());
-
     const auto fs_indx = robot_a.data()->forceSensorsIndex.at(robot_a_custom_force_sensor_name_);
-    robot_a.data()->forceSensors[fs_indx].wrench(measured_wrench_a);
+    robot_a.data()->forceSensors[fs_indx].wrench(measured_wrench_at_task_frame_a);
   }
 
-  mc_rtc::log::info("HELLO guysss ^^");
+  
+
+  
+
+  //////////////////////robot B
+  
+  getestimatedExternalWrench(ctl_, robot_b_name_, indx_ == 2 ? 1 : 2);
+  calculateMovingAverage(indx_ == 2 ? 1 : 2);
+
+  const mc_rbdyn::Robot & robot_b = ctl.robot(robot_b_name_);
+
+  const auto X_0_centroid_b = worldCentroidKinePTrans_[indx_ == 2 ? 0 : 1];
+
+  const auto R_centroid_limb_a =
+      sva::PTransformd(h_a.getOffset(limb_a_) * h_a.getPose(limb_a_).rotation())
+      * sva::PTransformd(X_0_centroid_b.rotation()).inv(); // TRANSFORMATION BW limb a and fb of robot b
+
+  const auto R_centroid_contact_b = sva::PTransformd(rot_contact_point_b)
+      * sva::PTransformd(X_0_centroid_b.rotation()).inv(); // rotation from centroid to contact point frame
+
+  const auto X_0_contact_b = sva::PTransformd(rot_contact_point_b, closest_point_rb);
+
+  const auto X_0_frame_b = task_b_->frame().position();
+
+  auto wrench_fb_centroid_b = estimatedExternalWrench_centroid_without_bias_[indx_ == 2 ? 0 : 1];
+
+  measured_wrench_b_centroid = (X_f_contactF_b.inv() * R_centroid_limb_a).dualMul(sva::ForceVecd(Eigen::Vector3d::Zero(), wrench_fb_centroid_b.force())); // transformation between the limb of task b and limb a of human  * transformation (only rot) bw limb a and fb of robot b
+
+  measured_wrench_b_centroid_trasnform =
+      transformExternalWrench(estimatedExternalWrench_centroid_without_bias_[indx_ == 2 ? 0 : 1], limb_b_,
+                              indx_ == 2 ? 1 : 2, X_0_frame_b);
+
+
+  measured_wrench_b_contact  = R_centroid_contact_b.dualMul(sva::ForceVecd(Eigen::Vector3d::Zero(), wrench_fb_centroid_b.force()));
+  measured_wrench_at_task_frame_b = (X_0_frame_b * X_0_contact_b.inv()).dualMul(measured_wrench_b_contact);
+
+  // if(activation_enforced_)
+  // {
+  //   const sva::ForceVecd fake_wrench = 0*sva::ForceVecd(Eigen::Vector3d::Zero(),Eigen::Vector3d{0,-10,-10});
+  //   measured_wrench_b = (X_0_frame * X_0_fb.inv()).dualMul( fake_wrench  );
+  // }
+  mc_rtc::log::info("robot b is {}, measured wrench at contact is \n {}\nmeasured_wrench_at_task_frame_b\n{} \n directly from centroid \n{}\n with my transform \n{}",
+                    robot_b_name_, measured_wrench_b_contact,
+                    measured_wrench_at_task_frame_b, measured_wrench_b_centroid, measured_wrench_b_centroid_trasnform);
+
+    
   if(task_b_->frame().hasForceSensor() && task_b_->frame().forceSensor().name() != robot_b_custom_force_sensor_name_)
   {
-    measured_wrench_b = task_b_->frame().wrench();
+    auto measured_fs_b = task_b_->frame().wrench();
+    // measured_wrench_at_task_frame_b = measured_fs_b;
 
-    mc_rtc::log::info("robot {} has a force sensor named {}", robot_b_name_, task_b_->frame().forceSensor().name());
-
-
-    mc_rtc::log::info("offset transation {}", h_b.getOffset(limb_b_).translation());
-
+    mc_rtc::log::info("robot b {} has a force sensor named {} \n wrench at fs \n{}", robot_b_name_, task_b_->frame().forceSensor().name(),measured_fs_b);
   }
   else
   {
-    mc_rtc::log::info("robot {} does not have a force sensor ", robot_b_name_);
-
-    // if the link is not equipped with F/T sensing, we use an estimator that will set the global estimatied force in
-    // the mbc at the fb (floating base ?)
-    getestimatedExternalWrench(ctl_, robot_b_name_, indx_ == 2 ? 1 : 2);
-    calculateMovingAverage(indx_ == 2 ? 1 : 2);
-
-    const mc_rbdyn::Robot & robot_b = ctl.robot(robot_b_name_);
-    const auto X_0_fb = ctl.robot(robot_b_name_).posW();
-
-    const auto X_0_centroid = worldCentroidKinePTrans_[indx_ == 2 ? 0 : 1];
-
-    const auto R_fb_limb_a =
-        sva::PTransformd(h_a.getOffset(limb_a_) * h_a.getPose(limb_a_).rotation())
-        * sva::PTransformd(X_0_fb.rotation()).inv(); // TRANSFORMATION BW limb a of human and fb of robot b
-
-    const auto R_centroid_limb_a =
-        sva::PTransformd(h_a.getOffset(limb_a_) * h_a.getPose(limb_a_).rotation())
-        * sva::PTransformd(X_0_centroid.rotation()).inv(); // TRANSFORMATION BW limb a and fb of robot b
-
-    const auto X_0_frame = task_b_->frame().position();
-
-    auto wrench_fb = ctl.getCalibratedExtWrench(ctl.realRobot(robot_b_name_));
-
-    auto wrench_fb_centroid = estimatedExternalWrench_centroid_without_bias_[indx_ == 2 ? 0 : 1];
-
-    measured_wrench_b = (X_f_contactF_b.inv() * R_fb_limb_a)
-                            .dualMul(sva::ForceVecd(Eigen::Vector3d::Zero(),
-                                                    wrench_fb.force())); // tester de mettre la transfo plus simplement
-    // transformation between the limb of task b and limb a of human  * transformation (only rot) bw limb a and fb of robot b
-
-    // h_a.getOffset(limb_a_) * h_a.getPose(limb_a_) * task_b_->frame().position().inv();
-
-    mc_rtc::log::info("offset transation {}", h_b.getOffset(limb_b_).translation());
-
-    measured_wrench_b_centroid =
-        (X_f_contactF_b.inv() * R_centroid_limb_a)
-            .dualMul(sva::ForceVecd(Eigen::Vector3d::Zero(), wrench_fb_centroid.force()));
-
-    measured_wrench_b_centroid_trasnform =
-        transformExternalWrench(estimatedExternalWrench_centroid_without_bias_[indx_ == 2 ? 0 : 1], limb_b_,
-                                indx_ == 2 ? 1 : 2, task_b_->frame().position());
-
-    // if(activation_enforced_)
-    // {
-    //   const sva::ForceVecd fake_wrench = 0*sva::ForceVecd(Eigen::Vector3d::Zero(),Eigen::Vector3d{0,-10,-10});
-    //   measured_wrench_b = (X_0_frame * X_0_fb.inv()).dualMul( fake_wrench  );
-    // }
-
-    mc_rtc::log::info("robot b is {}, measured wrench at fb is \n {}\nat centroid \n{}\n with centroid transform\n{}",
-                      robot_b_name_, measured_wrench_b, measured_wrench_b_centroid,
-                      measured_wrench_b_centroid_trasnform);
+     mc_rtc::log::info("robot b {} does not have a force sensor ", robot_b_name_);
 
     const auto fs_indx = robot_b.data()->forceSensorsIndex.at(robot_b_custom_force_sensor_name_);
-    robot_b.data()->forceSensors[fs_indx].wrench(measured_wrench_b);
-
-    // ctl_.robots().robot(robot_name).frame(f).wrench(); // this is where i am getting the wrench for now
+    robot_b.data()->forceSensors[fs_indx].wrench(measured_wrench_at_task_frame_b);
 
     // task_b_->setMeasuredWrench(measured_wrench_b);
   }
+
+
+
 
   // mc_rtc::log::info("human_a is {}\nX_f_contactF_b trans {}",h_a.name(),X_f_contactF_b.translation());
 
@@ -320,14 +310,13 @@ bool ForceTransmissionLocal::run(mc_control::fsm::Controller & ctl_)
   const biRobotTeleop::RobotPose & robot_b_pose = indx_ == 2 ? ctl.r_1_ : ctl.r_2_;
 
   const sva::ForceVecd targetWrench_b =
-      (X_f_contactF_b.inv() * robot_a_pose.getOffset(limb_a_))
-          .dualMul(-measured_wrench_a); // transformation between  limb a and the limb of task b
+      (X_0_frame_b * X_0_contact_b.inv())
+          .dualMul(-measured_wrench_a_contact); // transformation between  limb a and the limb of task b
 
-  const sva::ForceVecd targetWrench_a = (X_f_contactF_a.inv() * robot_b_pose.getOffset(limb_b_))
-                                            .dualMul(-measured_wrench_b); // measured wrench b at frame b
+  const sva::ForceVecd targetWrench_a = (X_0_frame_a * X_0_contact_a.inv())
+                                            .dualMul(-measured_wrench_b_contact); // measured wrench b at frame b
   // but moved to
 
-  mc_rtc::log::info("robot_b_pose.getOffset(limb_b_) {}", robot_b_pose.getOffset(limb_b_));
 
   task_a_->targetWrench(targetWrench_a);
   task_b_->targetWrench(targetWrench_b);
@@ -386,7 +375,7 @@ bool ForceTransmissionLocal::checkActivation(mc_control::fsm::Controller & ctl_,
           
       min_d = std::min(d, min_d);
     } // loops on the other pair B and gets the closest distance between the fs limb (here of the human controlling
-      // robot A) and all the robot limbs
+      // robot A) and all the robot limbs of B
 
     // plusieurs conditions :
     // la force mesuree sur robot A (apres filtre) est plus grande que le threshold
@@ -657,7 +646,7 @@ const biRobotTeleop::Limbs ForceTransmissionLocal::getContactLimb(mc_control::fs
 
 /// @brief Given a robot (1 or 2), computes the distance between this robot's limb and the limb of the human it's
 /// interacting with. Also registers the closest point on the robot for this limb
-std::tuple<const Eigen::Vector3d,const Eigen::Vector3d, const Eigen::Vector3d>  ForceTransmissionLocal::getDistanceAndContactPoint(mc_control::fsm::Controller & ctl_,
+std::tuple<const Eigen::Vector3d,const Eigen::Vector3d, const Eigen::Vector3d, const Eigen::Matrix3d>  ForceTransmissionLocal::getDistanceAndContactPoint(mc_control::fsm::Controller & ctl_,
                                                                  const int robot_indx,
                                                                  const biRobotTeleop::Limbs limb_robot,
                                                                  const biRobotTeleop::Limbs limb_human)
@@ -691,16 +680,19 @@ std::tuple<const Eigen::Vector3d,const Eigen::Vector3d, const Eigen::Vector3d>  
 
   Eigen::Vector3d normal_dir;
   normal_dir <<test.m_x, test.m_y, test.m_z;
-  normal_dir = normal_dir * (1/normal_dir.norm());
+  normal_dir = normal_dir * (1.0/normal_dir.norm());
 
   mc_rtc::log::info("last direction {}", normal_dir);
 
   auto limb_rot = robot.bodyPosW(link_name).rotation();
 
+  mc_rtc::log::info("posW du limb \n {}", limb_rot);
+
   Eigen::Vector3d limb_dir;
-  limb_dir << limb_rot(6), limb_rot(7), limb_rot(8);  //pas normalise ??
+  limb_dir << limb_rot(2), limb_rot(5), limb_rot(8);  //pas normalise ??
 
   auto tangential_dir = normal_dir.cross(limb_dir).cross(normal_dir);
+  tangential_dir = tangential_dir * (1.0/tangential_dir.norm());
 
   auto third_dir = normal_dir.cross(tangential_dir);
 
@@ -711,12 +703,12 @@ std::tuple<const Eigen::Vector3d,const Eigen::Vector3d, const Eigen::Vector3d>  
       {tangential_dir(0), tangential_dir(1), tangential_dir(2)},
       {third_dir(0), third_dir(1), third_dir(2)},};
 
-      mc_rtc::log::info("transpose \n{} ", contact_point_rotation.transpose()*contact_point_rotation);
+      mc_rtc::log::info("determinant {} transpose \n{} ",contact_point_rotation.determinant(), contact_point_rotation.transpose()*contact_point_rotation);
   mc_rtc::log::info("contact_point_rot \n{}", contact_point_rotation);
 
 
 
-  mc_rtc::log::info("limb_dir for {} \n {}  \n {} {} {}", link_name, limb_dir(6), limb_dir(7), limb_dir(8));
+  mc_rtc::log::info("limb_dir for {}  \n {} {} {}", link_name, limb_rot(2), limb_rot(5), limb_rot(8));
 
 
   Eigen::Vector3d robot_point;
@@ -732,21 +724,10 @@ std::tuple<const Eigen::Vector3d,const Eigen::Vector3d, const Eigen::Vector3d>  
 
   // mc_rtc::log::info("robot {} link {}, human point {}, robot point {}", robot_indx, limb_robot, human_point.transpose(),robot_point.transpose());
 
-  closest_point_ = robot_point;
-
-
-  // if(robot_indx == 1)
-  // {
-  //   closests_points_robot_1_[limb_robot] = robot_point;
-  // }
-  // else if(robot_indx == 2)
-  // {
-  //   closests_points_robot_2_[limb_robot] = robot_point;
-  // }
 
   Eigen::Vector3d out;
   out << p1[0] - p2[0], p1[1] - p2[1], p1[2] - p2[2];
-  return {robot_point ,human_point,out};
+  return {robot_point ,human_point,out, contact_point_rotation};
 }
 
 
@@ -874,12 +855,12 @@ void ForceTransmissionLocal::addLog(mc_control::fsm::Controller & ctl_)
   logger.addLogEntry(name() + "_robot2_external_centroid", [this]() -> const sva::ForceVecd & { return estimatedExternalWrench_centroid_[1]; });
   logger.addLogEntry(name() + "_robot2_external_centroid_without_bias", [this]() -> const sva::ForceVecd & { return estimatedExternalWrench_centroid_without_bias_[1]; });
 
-  logger.addLogEntry(name() + "_robota_on_frame_fs", [this]() -> const sva::ForceVecd & { return measured_wrench_a; });
-  logger.addLogEntry(name() + "_robota_on_frame_centroid", [this]() -> const sva::ForceVecd & { return measured_wrench_a_centroid; });
-  logger.addLogEntry(name() + "_robota_on_frame_with_full_transfo", [this]() -> const sva::ForceVecd & { return measured_wrench_a_centroid_trasnform; });
-  logger.addLogEntry(name() + "_robotb_on_frame_fs", [this]() -> const sva::ForceVecd & { return measured_wrench_b; });
-  logger.addLogEntry(name() + "_robotb_on_frame_centroid", [this]() -> const sva::ForceVecd & { return measured_wrench_b_centroid; });
-  logger.addLogEntry(name() + "_robotb_on_frame_with_full_transfo", [this]() -> const sva::ForceVecd & { return measured_wrench_b_centroid_trasnform; });
+  logger.addLogEntry(name() + "_robota_contact", [this]() -> const sva::ForceVecd & { return measured_wrench_a_contact; });
+  logger.addLogEntry(name() + "_robota_direct_from_centroid", [this]() -> const sva::ForceVecd & { return measured_wrench_a_centroid; });
+  logger.addLogEntry(name() + "_robota_task_frame", [this]() -> const sva::ForceVecd & { return measured_wrench_at_task_frame_a; });
+  logger.addLogEntry(name() + "_robotb_contact", [this]() -> const sva::ForceVecd & { return measured_wrench_b_contact; });
+  logger.addLogEntry(name() + "_robotb_direct_from_centroid", [this]() -> const sva::ForceVecd & { return measured_wrench_b_centroid; });
+  logger.addLogEntry(name() + "_robotb_task_frame", [this]() -> const sva::ForceVecd & { return measured_wrench_at_task_frame_b; });
 }
 
 

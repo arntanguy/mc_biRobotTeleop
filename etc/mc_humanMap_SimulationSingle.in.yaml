@@ -23,7 +23,7 @@ human_1:
         # mc_human
         left:
           # rotation: [1.57, 0, 0]
-          rotation: [0, 0, 0]
+          rotation: [0, 3.14, 0]
         right:
           rotation: [0, 0, 0]
     hand:

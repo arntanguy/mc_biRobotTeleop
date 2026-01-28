@@ -12,8 +12,8 @@ human_1:
       offset:
         # mc_human
         left:
-          # rotation: [1.57, 0, 0]
-          rotation: [0, 0, 0]
+          rotation: [0, 3.14, 0]
+          # rotation: [0, 0, 0]
         right:
           rotation: [0, 0, 0]
     forearm:

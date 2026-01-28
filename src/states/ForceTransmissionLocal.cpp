@@ -216,9 +216,9 @@ bool ForceTransmissionLocal::run(mc_control::fsm::Controller & ctl_)
 
   if(task_a_->frame().hasForceSensor() && task_a_->frame().forceSensor().name() != robot_a_custom_force_sensor_name_)
   {
-    auto measured_a_fs = task_a_->frame().wrench();
-    // measured_wrench_at_task_frame_a = measured_a_fs;
-     mc_rtc::log::info("robot a {} has a force sensor named {}\n wrench at fs\n{}", robot_a_name_, task_a_->frame().forceSensor().name(), measured_a_fs);
+    measured_fs_a = task_a_->frame().wrench();
+    // measured_wrench_at_task_frame_a = measured_fs_a;
+     mc_rtc::log::info("robot a {} has a force sensor named {}\n wrench at fs\n{}", robot_a_name_, task_a_->frame().forceSensor().name(), measured_fs_a);
 
     if(activation_enforced_)
     {
@@ -237,6 +237,13 @@ bool ForceTransmissionLocal::run(mc_control::fsm::Controller & ctl_)
     const auto fs_indx = robot_a.data()->forceSensorsIndex.at(robot_a_custom_force_sensor_name_);
     robot_a.data()->forceSensors[fs_indx].wrench(measured_wrench_at_task_frame_a);
   }
+
+  auto indx = ctl.robot(robot_a_name_).data()->forceSensorsIndex["LeftHandForceSensor"];
+      // minus between frame and force sensor
+      ctl.robot(robot_a_name_)
+          .data()
+          ->forceSensors[indx]
+          .wrench(sva::ForceVecd(Eigen::Vector3d::Zero(), Eigen::Vector3d{0, 0, 20}));
 
   
 
@@ -286,7 +293,7 @@ bool ForceTransmissionLocal::run(mc_control::fsm::Controller & ctl_)
     
   if(task_b_->frame().hasForceSensor() && task_b_->frame().forceSensor().name() != robot_b_custom_force_sensor_name_)
   {
-    auto measured_fs_b = task_b_->frame().wrench();
+    measured_fs_b = task_b_->frame().wrench();
     // measured_wrench_at_task_frame_b = measured_fs_b;
 
     mc_rtc::log::info("robot b {} has a force sensor named {} \n wrench at fs \n{}", robot_b_name_, task_b_->frame().forceSensor().name(),measured_fs_b);
@@ -304,17 +311,23 @@ bool ForceTransmissionLocal::run(mc_control::fsm::Controller & ctl_)
 
 
 
+  const sva::ForceVecd fake_wrench = sva::ForceVecd(Eigen::Vector3d::Zero(),Eigen::Vector3d{0,-10,-10});
+
+  const sva::ForceVecd fake_wrench_at_frame = (X_0_frame_b * X_0_centroid_b.inv()).dualMul( fake_wrench  );
+  
+
   // mc_rtc::log::info("human_a is {}\nX_f_contactF_b trans {}",h_a.name(),X_f_contactF_b.translation());
 
   const biRobotTeleop::RobotPose & robot_a_pose = indx_ == 1 ? ctl.r_1_ : ctl.r_2_;
   const biRobotTeleop::RobotPose & robot_b_pose = indx_ == 2 ? ctl.r_1_ : ctl.r_2_;
 
-  const sva::ForceVecd targetWrench_b =
+  targetWrench_b =
       (X_0_frame_b * X_0_contact_b.inv())
           .dualMul(-measured_wrench_a_contact); // transformation between  limb a and the limb of task b
 
-  const sva::ForceVecd targetWrench_a = (X_0_frame_a * X_0_contact_a.inv())
-                                            .dualMul(-measured_wrench_b_contact); // measured wrench b at frame b
+  targetWrench_a = (X_0_frame_a * X_0_contact_a.inv()).dualMul(-fake_wrench_at_frame); // measured wrench b at frame b
+  // targetWrench_a = (X_f_contactF_a.inv() * robot_b_pose.getOffset(limb_b_)).dualMul(-fake_wrench_at_frame); // measured wrench b at frame b
+                                            
   // but moved to
 
 
@@ -858,9 +871,14 @@ void ForceTransmissionLocal::addLog(mc_control::fsm::Controller & ctl_)
   logger.addLogEntry(name() + "_robota_contact", [this]() -> const sva::ForceVecd & { return measured_wrench_a_contact; });
   logger.addLogEntry(name() + "_robota_direct_from_centroid", [this]() -> const sva::ForceVecd & { return measured_wrench_a_centroid; });
   logger.addLogEntry(name() + "_robota_task_frame", [this]() -> const sva::ForceVecd & { return measured_wrench_at_task_frame_a; });
+  logger.addLogEntry(name() + "_robota_sensor", [this]() -> const sva::ForceVecd & { return measured_fs_a; });
   logger.addLogEntry(name() + "_robotb_contact", [this]() -> const sva::ForceVecd & { return measured_wrench_b_contact; });
   logger.addLogEntry(name() + "_robotb_direct_from_centroid", [this]() -> const sva::ForceVecd & { return measured_wrench_b_centroid; });
   logger.addLogEntry(name() + "_robotb_task_frame", [this]() -> const sva::ForceVecd & { return measured_wrench_at_task_frame_b; });
+  logger.addLogEntry(name() + "_robotb_sensor", [this]() -> const sva::ForceVecd & { return measured_fs_b; });
+  logger.addLogEntry(name() + "_robota_targetWrench", [this]() -> const sva::ForceVecd & { return targetWrench_a; });
+  logger.addLogEntry(name() + "_robotb_targetWrench", [this]() -> const sva::ForceVecd & { return targetWrench_b; });
+
 }
 
 

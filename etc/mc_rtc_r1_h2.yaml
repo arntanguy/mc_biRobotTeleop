@@ -3,8 +3,12 @@ MainRobot:
   name: robot_1 # for robot_1
   # module: HRP2DRC # desired robot module
   module: HRP4::ImpactGrippers
+  # module: RHPS1_sake2_sake2
+
 Enabled: BiRobotTeleoperation
 Log: true
+
+
 
 Timestep: 0.005
 

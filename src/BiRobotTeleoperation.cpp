@@ -281,8 +281,8 @@ void BiRobotTeleoperation::init_()
     logger().addLogEntry(robot.name() + "_ext_force_base",
                          [this, &robot]() -> const sva::ForceVecd { return getCalibratedExtWrench(robot); });
   }
-  logger().addLogEntry("robot_1_ext_force_base_gt",
-                       [this]() -> const sva::ForceVecd { return getExtWrenchGT(realRobot("robot_1"), "LeftHand"); });
+  // logger().addLogEntry("robot_1_ext_force_base_gt",
+  //                      [this]() -> const sva::ForceVecd { return getExtWrenchGT(realRobot("robot_1"), "LeftHand"); });
   logger().addLogEntry("BiRobotTeleop_distantController_online", [this]() -> bool { return hp_rec_.online(); });
 
   if(global_config_.has("Franka"))

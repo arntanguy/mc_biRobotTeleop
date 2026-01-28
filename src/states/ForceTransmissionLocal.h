@@ -187,6 +187,11 @@ struct ForceTransmissionLocal : mc_control::fsm::State
   sva::ForceVecd measured_wrench_b_centroid_trasnform = sva::ForceVecd::Zero(); // measured force in the link frame
   sva::ForceVecd measured_wrench_a_centroid_trasnform = sva::ForceVecd::Zero(); // measured force in the link frame
 
+  sva::ForceVecd targetWrench_b = sva::ForceVecd::Zero();
+  sva::ForceVecd targetWrench_a = sva::ForceVecd::Zero();
+  sva::ForceVecd measured_fs_b = sva::ForceVecd::Zero();
+  sva::ForceVecd measured_fs_a = sva::ForceVecd::Zero();
+
   double force_activation_threshold_ = 10; // force threshold on which the force control is activated;
   double distance_activation_threshold_ = 0.02;
   double deactivation_threshold_ = 0.15; // distance threshold on which the force control is deactivated

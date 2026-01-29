@@ -57,68 +57,68 @@ OpenVRPlugin:
 
 
 
-ObserverPipelines:
-- name: ObserverPipeline_robot_1
-  gui: true
-  observers:
-  - type: Encoder
-    name: Encoder_1
-    robot: robot_1
-    update_robot: robot_1
-  - type: Attitude
-    name: Attitude_1
-    robot: robot_1
-    update_robot: robot_1
-    required: true
-    update: true
-  - type: KinematicInertial
-    name: KinematicInertial_1
-    robot: robot_1
-    update_robot: robot_1
-    update: true
-    config:
-      cutoff: 0.02
-      anchorFrame:
-        maxAnchorFrameDiscontinuity: 0.02
-  - type: MCKineticsObserver
-    name: MCKineticsObserver_1
-    update: true
-    robot: robot_1
-    withDebugLogs: true
-    leggedOdometry:
-      odometryType: None
-    exportValue:
-      exportContactWrench: true
-      exportExternalWrench: true
-- name: ObserverPipeline_robot_2
-  gui: true
-  observers:
-  - type: Encoder
-    name: Encoder_2
-    robot: robot_2
-    update_robot: robot_2
-  - type: Attitude
-    name: Attitude_2
-    robot: robot_2
-    update_robot: robot_2
-    required: true
-    update: true
-  - type: KinematicInertial
-    name: KinematicInertial_2
-    robot: robot_2
-    update_robot: robot_2
-    update: true
-    config:
-      cutoff: 0.02
-      anchorFrame:
-        maxAnchorFrameDiscontinuity: 0.02
-  - type: MCKineticsObserver
-    name: MCKineticsObserver_2
-    update: true
-    robot: robot_2
-    withDebugLogs: true
-    leggedOdometry:
-      odometryType: None
-    exportValue:
-      exportContactWrench: true
-      exportExternalWrench: true
+# ObserverPipelines:
+# - name: ObserverPipeline_robot_1
+#   gui: true
+#   observers:
+#   - type: Encoder
+#     name: Encoder_1
+#     robot: robot_1
+#     update_robot: robot_1
+#   - type: Attitude
+#     name: Attitude_1
+#     robot: robot_1
+#     update_robot: robot_1
+#     required: true
+#     update: true
+#   - type: KinematicInertial
+#     name: KinematicInertial_1
+#     robot: robot_1
+#     update_robot: robot_1
+#     update: true
+#     config:
+#       cutoff: 0.02
+#       anchorFrame:
+#         maxAnchorFrameDiscontinuity: 0.02
+#   - type: MCKineticsObserver
+#     name: MCKineticsObserver_1
+#     update: true
+#     robot: robot_1
+#     withDebugLogs: true
+#     leggedOdometry:
+#       odometryType: None
+#     exportValue:
+#       exportContactWrench: true
+#       exportExternalWrench: true
+# - name: ObserverPipeline_robot_2
+#   gui: true
+#   observers:
+#   - type: Encoder
+#     name: Encoder_2
+#     robot: robot_2
+#     update_robot: robot_2
+#   - type: Attitude
+#     name: Attitude_2
+#     robot: robot_2
+#     update_robot: robot_2
+#     required: true
+#     update: true
+#   - type: KinematicInertial
+#     name: KinematicInertial_2
+#     robot: robot_2
+#     update_robot: robot_2
+#     update: true
+#     config:
+#       cutoff: 0.02
+#       anchorFrame:
+#         maxAnchorFrameDiscontinuity: 0.02
+#   - type: MCKineticsObserver
+#     name: MCKineticsObserver_2
+#     update: true
+#     robot: robot_2
+#     withDebugLogs: true
+#     leggedOdometry:
+#       odometryType: None
+#     exportValue:
+#       exportContactWrench: true
+#       exportExternalWrench: true

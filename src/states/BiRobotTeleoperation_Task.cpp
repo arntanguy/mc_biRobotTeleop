@@ -144,6 +144,8 @@ bool BiRobotTeleoperation_Task::run(mc_control::fsm::Controller & ctl_)
   const biRobotTeleop::HumanPose & hp_1 = ctl.getHumanPose(0, useEstimatedHuman_);
   const biRobotTeleop::HumanPose & hp_2 = ctl.getHumanPose(1, useEstimatedHuman_);
 
+  std::cout << "human 2 active " << hp_2.humanActive()<<std::endl;
+
   auto posture_1 = ctl_.getPostureTask(r1_name_);
   auto posture_2 = ctl_.getPostureTask(r2_name_);
 
@@ -155,6 +157,7 @@ bool BiRobotTeleoperation_Task::run(mc_control::fsm::Controller & ctl_)
   for(auto & task : biTasks_)
   {
     task->updateHuman(hp_1, hp_2);
+
     dist.push_back(task->getRelativeTransfo()[indx_sotfM].translation().norm());
     minDist_ = std::min(minDist_, dist.back());
     if(dist_.size() > indx)

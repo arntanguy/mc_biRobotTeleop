@@ -88,11 +88,11 @@ HumanPoseEstimationResult HumanPoseEstimationJob::computeJob()
   task_weight_.clear();
   for(auto & limb : target_limbs_)
   {
-    // if(!h.limbActive(limb) || !h.limbActive(biRobotTeleop::Limbs::Pelvis))
-    // {
-    //   // return;
-    //   continue; // TODO    
-    // }
+    if(!h.limbActive(limb) || !h.limbActive(biRobotTeleop::Limbs::Pelvis))
+    {
+      // return;
+      continue; // TODO    
+    }
     const sva::PTransformd offset = h.getOffset(limb);
     addTransformTask(human, humanRobot_links_.getName(limb), offset * h.getPose(limb), offset * h.getVel(limb),
                      stiffness_);
@@ -139,6 +139,8 @@ HumanPoseEstimationResult HumanPoseEstimationJob::computeJob()
     const auto link = humanRobot_links_.getName(limb);
     set_estimated_values(human, result.h_estimated_, link, limb);
     result.h_estimated_.setOffset(h.getOffset());
+    result.h_estimated_.setLimbActiveState(limb,h.limbActive(limb));
+    result.h_estimated_.setPreviousPose(limb,h.getPreviousPose(limb));
   }
   return result;
 }

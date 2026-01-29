@@ -92,7 +92,13 @@ struct BiRobotTeleoperation_DLLAPI BiRobotTeleoperation : public mc_control::fsm
     // const sva::MotionVecd v = human_pose.getVel(human_link);
     // human_pose.setAcc(human_link, X_link_link0  * human.bodyAccB(link) +
     // sva::MotionVecd(Eigen::Vector3d::Zero(),v.angular().cross(v.linear())));
-    human_pose.setLimbActiveState(human_link, true);
+
+    // if(human_pose.limbActive(human_link)&&human_pose.limbActive(biRobotTeleop::Limbs::Pelvis)){
+    //   human_pose.setPreviousPose(human_link, human_pose.getPose(human_link)); // TODO not sure....
+    // }
+
+
+    // human_pose.setLimbActiveState(human_link, true);
   }
   void updateHumanPose(const mc_rbdyn::Robot & human, biRobotTeleop::HumanPose & human_pose)
   {
@@ -117,6 +123,7 @@ struct BiRobotTeleoperation_DLLAPI BiRobotTeleoperation : public mc_control::fsm
     {
       const auto limb = static_cast<biRobotTeleop::Limbs>(i);
       h_target.setPose(limb, h.getPose(limb));
+      // h_target.setPreviousPose(limb, h.getPreviousPose(limb));
       h_target.setVel(limb, h.getVel(limb));
       h_target.setAcc(limb, h.getAcc(limb));
       h_target.setLimbActiveState(limb, h.limbActive(limb));

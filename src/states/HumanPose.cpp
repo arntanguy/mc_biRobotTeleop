@@ -58,6 +58,7 @@ void HumanPose::start(mc_control::fsm::Controller & ctl_)
       mc_rtc::log::info("[{}] limb {} mapped to device {}", name(), limb[1], limb[0]);
       online_data_count_[human_deviceTolimbs_[limb[0]]] = 0;
       X_0_tracker_prev[human_deviceTolimbs_[limb[0]]] = sva::PTransformd::Identity();
+      trackers_lost[human_deviceTolimbs_[limb[0]]] = false;
     }
 
     config_("robot_device", robot_device_);
@@ -232,6 +233,11 @@ bool HumanPose::run(mc_control::fsm::Controller & ctl_)
           // mc_rtc::log::warning("[{}] tracker on limb {} not received\nKeeping the previous pose\n{}", name(),
           //                      biRobotTeleop::limb2Str(limb), h.getPose(limb));
           // mc_rtc::log::info(checkNorm(h.getPose(limb)));
+
+          mc_rtc::log::warning("[{}] tracker on limb {} not received, {}, {}, {}", name(),
+                                 biRobotTeleop::limb2Str(limb), checkNorm(X_0_robotTracker), checkNorm(X_0_trackerRaw),
+                                 checkNorm(X_0_tracker));
+
           h.setVel(limb, sva::MotionVecd::Zero());
           if(online_data_count_[limb] >= offline_threshold_ && h.limbActive(limb))
           {
@@ -245,15 +251,24 @@ bool HumanPose::run(mc_control::fsm::Controller & ctl_)
             online_data_count_[limb] += 1;
           }
 
-          mc_rtc::log::warning("[{}] tracker on limb {} not received, previous pose \n{}, \nttracjker prev \n{}",
-                               name(), biRobotTeleop::limb2Str(limb), h.getPose(limb), X_0_tracker_prev[limb]);
+          // mc_rtc::log::warning("[{}] tracker on limb {} not received, previous pose \n{}, \nttracjker prev \n{}",
+          //                      name(), biRobotTeleop::limb2Str(limb), h.getPose(limb), X_0_tracker_prev[limb]);
 
-          h.setPose(limb, X_0_tracker_prev[limb]);
+          mc_rtc::log::warning("[{}] tracker on limb {} not receive",
+                               name(), biRobotTeleop::limb2Str(limb));
+
+          // h.setPose(limb, X_0_tracker_prev[limb]);
+
+          ctl.datastore().assign<bool>("trackersHuman1_lost", true);
 
           // X_0_tracker = X_0_tracker_prev[limb] ;
         }
         else
         {
+
+          // sum of all trackers lost !!!!
+
+
           // mc_rtc::log::info("[{}] tracker on limb {} received", name(), biRobotTeleop::limb2Str(limb));
 
           const sva::MotionVecd v_tracker =
@@ -279,9 +294,17 @@ bool HumanPose::run(mc_control::fsm::Controller & ctl_)
           
 
           h.setPose(limb, X_0_tracker);
+          
           h.setVel(limb, v_tracker);
           online_data_count_[limb] == 0;
           h.setLimbActiveState(limb, true);
+
+
+          // if(h.limbActive(limb)&&h.limbActive(biRobotTeleop::Limbs::Pelvis)){
+          //   h.setPreviousPose(limb, X_0_tracker);
+          // }
+
+          
         }
       }
     }

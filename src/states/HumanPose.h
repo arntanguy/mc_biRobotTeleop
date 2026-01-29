@@ -63,4 +63,6 @@ struct HumanPose : mc_control::fsm::State
   mc_rbdyn::RobotsPtr viveTrackersRobots_ = nullptr;
 
   std::map<biRobotTeleop::Limbs, sva::PTransformd> X_0_tracker_prev;
+
+  std::map<biRobotTeleop::Limbs, bool> trackers_lost;
 };

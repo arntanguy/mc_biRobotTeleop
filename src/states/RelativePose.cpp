@@ -15,6 +15,7 @@ void RelativePose::configure(const mc_rtc::Configuration & config)
   full_stiff_duration_ = stateConfig_("variable_stiffness")("duration_to_full", 1.);
   low_stiff_duration_ = stateConfig_("variable_stiffness")("duration_at_low", 1.);
   low_stiffness_ = stateConfig_("variable_stiffness")("low", 10);
+  low_damping_ = stateConfig_("variable_damping")("low", 10);
 
   if(stateConfig_.has("completion_eval"))
   {
@@ -38,6 +39,7 @@ void RelativePose::start(mc_control::fsm::Controller & ctl_)
 
   task_->load(ctl_.solver(), stateConfig_("task"));
   stiffness_ = task_->stiffness();
+  damping_ = task_->damping();
   dt_ = ctl_.timeStep;
   count_ = 0;
   task_->target(task_->frame().position());
@@ -62,17 +64,20 @@ bool RelativePose::run(mc_control::fsm::Controller & ctl_)
     if(t_active < low_stiff_duration_)
     {
       task_->stiffness(low_stiffness_);
+      task_->damping(low_damping_);
       count_ += 1;
     }
     else if(t_active <= low_stiff_duration_ + full_stiff_duration_)
     {
       const double alpha = (t_active - low_stiff_duration_) / (full_stiff_duration_);
       task_->stiffness(low_stiffness_ + alpha * (stiffness_ - low_stiffness_));
+      task_->damping(low_damping_ + alpha *(damping_ - low_damping_));
       count_ += 1;
     }
     else
     {
       stiffness_ = task_->stiffness();
+      task_->damping(damping_);
     }
 
     X_0_hRef_ = h.getOffset(biRobotTeleop::Limbs::Pelvis) * h.getPose(biRobotTeleop::Limbs::Pelvis);

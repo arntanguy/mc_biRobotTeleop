@@ -40,6 +40,8 @@ struct RelativePose : mc_control::fsm::State
 
   double stiffness_ = 0;
   double low_stiffness_ = 10;
+  double damping_ = 10;
+  double low_damping_ = 10;
 
   double dt_ = 0.005;
   size_t count_ = 0;

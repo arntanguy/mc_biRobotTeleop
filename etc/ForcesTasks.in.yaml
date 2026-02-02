@@ -2,7 +2,7 @@
 Forces:
   base: ForceTransmissionLocal
   integration_window: 5 #[s]
-  force_activation_threshold: 6 #6d force norm
+  force_activation_threshold: 10 #6d force norm
   distance_activation_threshold: 0.01
   deactivation_threshold: 0.05 #[m]
 

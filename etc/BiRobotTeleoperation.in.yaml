@@ -27,8 +27,8 @@ robots:
     module: HRP4::ImpactGrippers
     # module: HRP2DRC  #for hrp2
     # module: RHPS1_sake2_sake2
-    init_pos:
-      translation: [1.0, 0, 0.747187]
+    # init_pos:
+    #   translation: [1.2, 0, 0.747187]
       
   robot_2:
     module: HRP4::ImpactGrippers #_forceshoe_forceshoe_lirmm_lirmm  _MuJoCo
@@ -37,6 +37,16 @@ robots:
     init_pos:
       translation: [1.7, 0, 0.747187]
       rotation: [0, 0, 3.14]
+
+
+  robot_human_1:
+    module: JVRC1 #_forceshoe_forceshoe_lirmm_lirmm  _MuJoCo
+    # module: RHPS1_sake2_sake2
+    # module: HRP2DRC  #for hrp2
+    init_pos:
+      translation: [1.1, 0, 0.827]
+      rotation: [0, 0, 0]
+
 
 # General constraints, always on
 constraints:

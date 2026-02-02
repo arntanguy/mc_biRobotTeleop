@@ -172,7 +172,6 @@ bool BiRobotTeleoperation_Task::run(mc_control::fsm::Controller & ctl_)
 
   if(weightDistanceRange_.x() != weightDistanceRange_.y())
   {
-
     Eigen::Matrix2d A;
     A << weightDistanceRange_.x(), 1, weightDistanceRange_.y(), 1;
     const Eigen::Vector2d coeff = A.inverse() * weightRange_;

@@ -132,10 +132,9 @@ bool ForceTransmissionLocal::run(mc_control::fsm::Controller & ctl_)
   {
     active_force_measurement_->update(task_a_->frame().wrench()); // adds new measurement to the lowpass vector
   }
+
   // if((active_force_measurement_->eval().vector().norm() < force_activation_threshold_ ||
   //     d_a > deactivation_threshold_) && !activation_enforced_)
-
-  //TODO uncomment me
   // if((d_a > deactivation_threshold_))
   // {
   //   mc_rtc::log::info("[{}] Contact has been broken, deactivate force control\nd_a {} d_b {}", name(), d_a, d_b);
@@ -153,9 +152,6 @@ bool ForceTransmissionLocal::run(mc_control::fsm::Controller & ctl_)
   //   active_ = false;
   //   return true;
   // }
-
-  // sva::ForceVecd measured_wrench_a;
-  // sva::ForceVecd measured_wrench_b;
 
   const biRobotTeleop::HumanPose & h_b = ctl.getHumanPose((indx_ == 1) ? 1 : 0);
   const biRobotTeleop::HumanPose & h_a = ctl.getHumanPose((indx_ == 1) ? 0 : 1);
@@ -245,6 +241,8 @@ bool ForceTransmissionLocal::run(mc_control::fsm::Controller & ctl_)
           ->forceSensors[indx]
           .wrench(sva::ForceVecd(Eigen::Vector3d::Zero(), Eigen::Vector3d{0, 0, 20}));
 
+          // std::cout << std::endl << task_a_->frame().wrench() << std::endl << std::endl;
+
   
 
   
@@ -313,26 +311,22 @@ bool ForceTransmissionLocal::run(mc_control::fsm::Controller & ctl_)
 
   const sva::ForceVecd fake_wrench = sva::ForceVecd(Eigen::Vector3d::Zero(),Eigen::Vector3d{0,-10,-10});
 
-  const sva::ForceVecd fake_wrench_at_frame = (X_0_frame_b * X_0_centroid_b.inv()).dualMul( fake_wrench  );
+  const sva::ForceVecd fake_wrench_at_frame_b = (X_0_frame_b * X_0_contact_b.inv()).dualMul( fake_wrench  );
   
-
-  // mc_rtc::log::info("human_a is {}\nX_f_contactF_b trans {}",h_a.name(),X_f_contactF_b.translation());
-
   const biRobotTeleop::RobotPose & robot_a_pose = indx_ == 1 ? ctl.r_1_ : ctl.r_2_;
   const biRobotTeleop::RobotPose & robot_b_pose = indx_ == 2 ? ctl.r_1_ : ctl.r_2_;
 
-  targetWrench_b =
-      (X_0_frame_b * X_0_contact_b.inv())
-          .dualMul(-measured_wrench_a_contact); // transformation between  limb a and the limb of task b
+  targetWrench_b =  fake_wrench_at_frame_b;
+      // (X_0_frame_b * X_0_contact_b.inv())
+      //     .dualMul(-measured_wrench_a_contact); // transformation between  limb a and the limb of task b
 
-  targetWrench_a = (X_0_frame_a * X_0_contact_a.inv()).dualMul(-fake_wrench_at_frame); // measured wrench b at frame b
+  targetWrench_a = (X_0_frame_a * X_0_contact_a.inv()).dualMul(-fake_wrench); // measured wrench b at frame b
   // targetWrench_a = (X_f_contactF_a.inv() * robot_b_pose.getOffset(limb_b_)).dualMul(-fake_wrench_at_frame); // measured wrench b at frame b
                                             
-  // but moved to
+ 
 
-
-  task_a_->targetWrench(targetWrench_a);
-  task_b_->targetWrench(targetWrench_b);
+  // task_a_->targetWrench(targetWrench_a);
+  task_b_->targetWrench(-fake_wrench);
 
   return true;
 }
@@ -580,7 +574,7 @@ bool ForceTransmissionLocal::checkActivationTest(mc_control::fsm::Controller & c
       task_a_->velFilterGain(0.9);
       task_a_->name(task_a_->name() + "_a");
       limb_a_ = limb_a;
-      ctl.solver().addTask(task_a_);
+      // ctl.solver().addTask(task_a_);
 
       robot_b_name_ = (robot_a_name_ == "robot_1") ? "robot_2" : "robot_1";
 

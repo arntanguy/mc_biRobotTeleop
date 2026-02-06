@@ -244,7 +244,7 @@ void BiRobotTeleoperation::init_()
   distant_robot_name_ = (robot().name() == "robot_1") ? "robot_2" : "robot_1";
 
   using namespace mc_rtc::gui;
-  hp_rec_.init("receiver main", distant_human_name_, distant_robot_name_,
+  hp_rec_.init("receiverr main", distant_human_name_, distant_robot_name_,
                "tcp://" + ip_ + ":" + std::to_string(pub_port_), "tcp://" + ip_ + ":" + std::to_string(sub_port_));
   hp_rec_.startConnection();
 
@@ -281,8 +281,8 @@ void BiRobotTeleoperation::init_()
     logger().addLogEntry(robot.name() + "_ext_force_base",
                          [this, &robot]() -> const sva::ForceVecd { return getCalibratedExtWrench(robot); });
   }
-  logger().addLogEntry("robot_1_ext_force_base_gt",
-                       [this]() -> const sva::ForceVecd { return getExtWrenchGT(realRobot("robot_1"), "LeftHand"); });
+  // logger().addLogEntry("robot_1_ext_force_base_gt",
+  //                      [this]() -> const sva::ForceVecd { return getExtWrenchGT(realRobot("robot_1"), "LeftHand"); });
   logger().addLogEntry("BiRobotTeleop_distantController_online", [this]() -> bool { return hp_rec_.online(); });
 
   if(global_config_.has("Franka"))

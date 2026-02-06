@@ -1,8 +1,8 @@
 ---
 MainRobot:
   name: robot_1 # for robot_1
-  # module: HRP2DRC # desired robot module
-  module: HRP4::ImpactGrippers
+  module: HRP2DRC # desired robot module
+  # module: HRP4::ImpactGrippers
 Enabled: BiRobotTeleoperation
 Log: true
 
@@ -27,8 +27,9 @@ server:
   pub_port: 4243
 
 distant_controller:
-  # ip: 150.18.226.5 #host address of the distant controller
-  ip: 192.168.245.128
+  ip: 150.18.226.5 #host address of the distant controller
+  # ip: 150.18.226.6
+  # ip: 192.168.241.17
   sub_port: 4346   #should be the pub port of the distant server
   pub_port: 4245
   human_name: human_1 #or human_1

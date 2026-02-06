@@ -21,6 +21,7 @@ void HumanPose::start(mc_control::fsm::Controller & ctl_)
   const auto & config = ctl.getGlobalConfig();
 
   human_indx_ = ctl.getHumanIndx();
+  biRobotTeleop::HumanPose & h = ctl.getHumanPose(human_indx_);
   if(config_.has("human_indx"))
   {
     config_("human_indx", human_indx_);
@@ -59,12 +60,14 @@ void HumanPose::start(mc_control::fsm::Controller & ctl_)
       online_data_count_[human_deviceTolimbs_[limb[0]]] = 0;
       X_0_tracker_prev[human_deviceTolimbs_[limb[0]]] = sva::PTransformd::Identity();
       trackers_lost[human_deviceTolimbs_[limb[0]]] = false;
+      h.setLimbActiveState(human_deviceTolimbs_[limb[0]], false);
     }
 
     config_("robot_device", robot_device_);
     config_("robot_link", robot_link_);
     robot_link_ = r.getLinksMap().at(biRobotTeleop::str2Limb(robot_link_));
     config_("link_sensor_transfo")(robot_name_, X_link_sensor_);
+    
   }
   else
   {

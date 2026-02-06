@@ -145,6 +145,7 @@ bool BiRobotTeleoperation_Task::run(mc_control::fsm::Controller & ctl_)
   const biRobotTeleop::HumanPose & hp_2 = ctl.getHumanPose(1, useEstimatedHuman_);
 
   // std::cout << "human 2 active " << hp_2.humanActive()<<std::endl;
+  // std::cout << "human 1 active " << hp_1.humanActive()<<std::endl;
 
   auto posture_1 = ctl_.getPostureTask(r1_name_);
   auto posture_2 = ctl_.getPostureTask(r2_name_);

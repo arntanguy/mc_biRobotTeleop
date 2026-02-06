@@ -24,10 +24,11 @@ robots:
   ground:
     module: env/ground
   robot_1:
-    module: HRP4::ImpactGrippers
-    # module: HRP2DRC  #for hrp2
+    # module: HRP4::ImpactGrippers
+    module: HRP2DRC  #for hrp2
   robot_2:
-    module: HRP4::ImpactGrippers #_forceshoe_forceshoe_lirmm_lirmm  _MuJoCo
+    # module: HRP4::ImpactGrippers #_forceshoe_forceshoe_lirmm_lirmm  _MuJoCo
+    module: RHPS1_sake2_sake2
     # init_pos:
     #   translation: [0.7, 0, 0.747187]
     #   rotation: [0, 0, 3.14]
@@ -379,8 +380,8 @@ OpenVRPlugin:
   localData: false
   distantData:
     port: 12338
-    # ip: 150.18.226.6
-    ip: 192.168.241.17
+    ip: 150.18.226.6
+    # ip: 192.168.241.17
 
     # max_packet_size: 10
     verbose: false

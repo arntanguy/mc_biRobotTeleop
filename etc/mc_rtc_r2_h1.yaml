@@ -11,7 +11,7 @@ Timestep: 0.002
 
 GUIServer:
   IPC:
-    Socket: /tmp/mc_rtc
+    Socket: /tmp/mc_rtc1
   TCP:
     # Binding host, * binds to all interfaces
     Host: "*"

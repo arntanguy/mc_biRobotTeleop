@@ -11,7 +11,7 @@ Timestep: 0.005
 GUIServer:
   # Enable: false
   IPC:
-    Socket: /tmp/mc_rtc
+    Socket: /tmp/mc_rtc2
   TCP:
     # Binding host, * binds to all interfaces
     Host: "*"
@@ -27,7 +27,7 @@ server:
   pub_port: 4243
 
 distant_controller:
-  ip: 150.18.226.5 #host address of the distant controller
+  ip: 150.18.226.6 #host address of the distant controller
   # ip: 150.18.226.6
   # ip: 192.168.241.17
   sub_port: 4346   #should be the pub port of the distant server
@@ -44,11 +44,11 @@ human_sim:
   sub_port: 4545
   pub_port: 4646
 
-UDP:
-  host: hrp4005c
-  port: 4444
-  IgnoredJoints:
-    joints: [R_HAND_J0, R_HAND_J1, L_HAND_J1, L_HAND_J0]
+# UDP:
+#   host: hrp4005c
+#   port: 4444
+#   IgnoredJoints:
+#     joints: [R_HAND_J0, R_HAND_J1, L_HAND_J1, L_HAND_J0]
 
 OpenVRPlugin:
   distantData:

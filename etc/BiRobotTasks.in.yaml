@@ -17,7 +17,8 @@ BiTeleopTask_1:
     name: robot_1
     links: [LeftHand]
     # unactive_joints: ["Root", "CHEST_JOINT0", "CHEST_JOINT1"] #for hrp2
-    unactive_joints: ["Root", "CHEST_P", "CHEST_Y"]
+    unactive_joints: ["Root", "WAIST_R", "WAIST_Y"] #for jvrc1
+    # unactive_joints: ["Root", "CHEST_P", "CHEST_Y"]
     robot_to_human_transfo:
       simu:
         translation: [0., 0., 0.]
@@ -29,7 +30,8 @@ BiTeleopTask_1:
     name: "robot_2"
     # links: ["RightArm","RightForearm","RightHand"]
     links: ["RightArm", "RightForearm"]
-    unactive_joints: ["Root", "CHEST_P", "CHEST_Y"]
+    # unactive_joints: ["Root", "CHEST_P", "CHEST_Y"]
+    unactive_joints: ["Root", "WAIST_R", "WAIST_Y"] #for jvrc1
     robot_to_human_transfo:
       simu:
         translation: [0., 0., 0.]

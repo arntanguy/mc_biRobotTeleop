@@ -31,11 +31,16 @@ robots:
     #   translation: [1.2, 0, 0.747187]
       
   robot_2:
-    module: HRP4::ImpactGrippers #_forceshoe_forceshoe_lirmm_lirmm  _MuJoCo
-    # module: RHPS1_sake2_sake2
-    # module: HRP2DRC  #for hrp2
+    # module: HRP4::ImpactGrippers #_forceshoe_forceshoe_lirmm_lirmm  _MuJoCo
+    # # module: RHPS1_sake2_sake2
+    # # module: HRP2DRC  #for hrp2
+    # init_pos:
+    #   translation: [1.7, 0, 0.747187]
+    #   rotation: [0, 0, 3.14]
+
+    module: JVRC1 
     init_pos:
-      translation: [1.7, 0, 0.747187]
+      translation: [1.7, 0, 0.8275]
       rotation: [0, 0, 3.14]
 
 
@@ -93,6 +98,26 @@ collisions_with_joint_selection:
       joints: [R_SHOULDER_P, R_SHOULDER_R, R_SHOULDER_Y, R_ELBOW_P, R_WRIST_Y, R_WRIST_R]
     - b1: [L_CROTCH_P_LINK]
       b2: [R_CROTCH_P_LINK]
+      joints: []
+  jvrc1:
+    iDist: 0.02
+    sDist: 0.01
+    simplified_all_bodies: [PELVIS_S, WAIST_R_S, NECK_P_S, L_SHOULDER_P_S, L_SHOULDER_R_S, L_SHOULDER_Y_S,
+      L_ELBOW_P_S, L_WRIST_Y_S, L_WRIST_R_S, R_SHOULDER_P_S, R_SHOULDER_R_S, R_SHOULDER_Y_S,
+      R_ELBOW_Y_S, R_WRIST_Y_S, R_WRIST_R_S, R_HIP_Y_S, L_HIP_Y_S, R_KNEE_P_S,
+      L_KNEE_P_S]
+    cstr_sets:
+    - b1: [L_SHOULDER_Y_S, L_ELBOW_Y_S, L_WRIST_Y_S]
+      b2: [R_HIP_Y_S, L_HIP_Y_S, WAIST_R_S, NECK_P_S, PELVIS_S]
+      joints: [L_SHOULDER_P, L_SHOULDER_R, L_SHOULDER_Y, L_ELBOW_P, L_WRIST_Y, L_WRIST_R]
+    - b1: [R_SHOULDER_Y_S, R_ELBOW_Y_S, R_WRIST_Y_S]
+      b2: [R_HIP_Y_S, L_HIP_Y_S, WAIST_R_S, NECK_P_S, PELVIS_S]
+      joints: [R_SHOULDER_P, R_SHOULDER_R, R_SHOULDER_Y, R_ELBOW_P, R_WRIST_Y, R_WRIST_R]
+    - b1: [R_ELBOW_Y_S]
+      b2: [L_ELBOW_Y_S]
+      joints: [R_SHOULDER_P, R_SHOULDER_R, R_SHOULDER_Y, R_ELBOW_P, R_WRIST_Y, R_WRIST_R]
+    - b1: [L_HIP_Y_S]
+      b2: [R_HIP_Y_S]
       joints: []
   hrp4:
     iDist: 0.02

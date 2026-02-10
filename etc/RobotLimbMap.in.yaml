@@ -56,3 +56,20 @@ robot_limb_map:
       name: "BODY"
     head:
       name: "HEAD_LINK1"
+  jvrc1:
+    left_hand:
+      name: "L_WRIST_Y_S"
+    right_hand:
+      name: "R_WRIST_Y_S"
+    left_arm:
+      name: "L_SHOULDER_Y_S"
+    right_arm:
+      name: "R_SHOULDER_Y_S"
+    left_forearm:
+      name: "L_ELBOW_P_S"
+    right_forearm:
+      name: "R_ELBOW_P_S"
+    pelvis:
+      name: "PELVIS_S"
+    head:
+      name: "NECK_P_S"

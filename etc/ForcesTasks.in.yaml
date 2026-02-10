@@ -22,8 +22,9 @@ Forces:
       maxVel:
         angular: [0.7, 0.7, 0.7]
         linear: [0.7, 0.7, 0.7]
-      activeJoints: ["R_SHOULDER_P", "L_SHOULDER_P", "R_SHOULDER_R", "L_SHOULDER_R", "R_SHOULDER_Y", "L_SHOULDER_Y",
-        "R_ELBOW_P", "L_ELBOW_P", "R_WRIST_R", "L_WRIST_R", "R_WRIST_Y", "L_WRIST_Y", "R_WRIST_P", "L_WRIST_P"]
+      # activeJoints: ["R_SHOULDER_P", "L_SHOULDER_P", "R_SHOULDER_R", "L_SHOULDER_R", "R_SHOULDER_Y", "L_SHOULDER_Y",
+      #   "R_ELBOW_P", "L_ELBOW_P", "R_WRIST_R", "L_WRIST_R", "R_WRIST_Y", "L_WRIST_Y", "R_WRIST_P", "L_WRIST_P"]
+        activeJoints: ["R_SHOULDER_P", "L_SHOULDER_P", "R_SHOULDER_R", "L_SHOULDER_R", "R_SHOULDER_Y", "L_SHOULDER_Y", "R_ELBOW_P", "L_ELBOW_P", "R_WRIST_R", "L_WRIST_R", "R_WRIST_Y", "L_WRIST_Y", "R_WRIST_Y", "L_WRIST_Y"] #for jvrc1
   robot_2:
     task:
       weight: 2000

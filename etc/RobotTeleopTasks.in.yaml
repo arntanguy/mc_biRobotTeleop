@@ -20,7 +20,8 @@ RobotArm_1:
   task:
     type: transform
     # unactiveJoints: ["Root", "CHEST_JOINT0", "CHEST_JOINT1"] #for hrp2
-    unactiveJoints: ["Root", "CHEST_P", "CHEST_Y"]
+    # unactiveJoints: ["Root", "CHEST_P", "CHEST_Y"]
+    unactive_joints: ["Root", "WAIST_R", "WAIST_Y"] #for jvrc1
     frame: LeftArm
     dimWeight: [1, 1, 1, 0, 0, 0]
     weight: 200
@@ -41,7 +42,8 @@ RobotArm_2:
     # rotation: [0, 0., 0.] # for simple_human
   task:
     type: transform
-    unactiveJoints: ["Root", "CHEST_P", "CHEST_Y"]
+    # unactiveJoints: ["Root", "CHEST_P", "CHEST_Y"]
+    unactive_joints: ["Root", "WAIST_R", "WAIST_Y"] #for jvrc1
     frame: RightArm
     dimWeight: [1, 1, 1, 0, 0, 0]
     weight: 200

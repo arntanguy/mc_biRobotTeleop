@@ -294,6 +294,9 @@ bool ForceTransmissionLocal::run(mc_control::fsm::Controller & ctl_)
     measured_fs_b = task_b_->frame().wrench();
     // measured_wrench_at_task_frame_b = measured_fs_b;
 
+    const auto fs_indx = robot_b.data()->forceSensorsIndex.at(task_b_->frame().forceSensor().name());
+    robot_b.data()->forceSensors[fs_indx].wrench(measured_wrench_at_task_frame_b);
+
     mc_rtc::log::info("robot b {} has a force sensor named {} \n wrench at fs \n{}", robot_b_name_, task_b_->frame().forceSensor().name(),measured_fs_b);
   }
   else
@@ -305,18 +308,19 @@ bool ForceTransmissionLocal::run(mc_control::fsm::Controller & ctl_)
 
     // task_b_->setMeasuredWrench(measured_wrench_b);
   }
+ 
 
 
 
 
-  const sva::ForceVecd fake_wrench = sva::ForceVecd(Eigen::Vector3d::Zero(),Eigen::Vector3d{0,-10,-10});
+  const sva::ForceVecd fake_wrench = sva::ForceVecd(Eigen::Vector3d::Zero(),Eigen::Vector3d{-5,5,0});
 
   const sva::ForceVecd fake_wrench_at_frame_b = (X_0_frame_b * X_0_contact_b.inv()).dualMul( fake_wrench  );
   
   const biRobotTeleop::RobotPose & robot_a_pose = indx_ == 1 ? ctl.r_1_ : ctl.r_2_;
   const biRobotTeleop::RobotPose & robot_b_pose = indx_ == 2 ? ctl.r_1_ : ctl.r_2_;
 
-  targetWrench_b =  fake_wrench_at_frame_b;
+  targetWrench_b =  fake_wrench;
       // (X_0_frame_b * X_0_contact_b.inv())
       //     .dualMul(-measured_wrench_a_contact); // transformation between  limb a and the limb of task b
 
@@ -326,7 +330,7 @@ bool ForceTransmissionLocal::run(mc_control::fsm::Controller & ctl_)
  
 
   // task_a_->targetWrench(targetWrench_a);
-  task_b_->targetWrench(-fake_wrench);
+  task_b_->targetWrench(fake_wrench);
 
   return true;
 }

@@ -397,10 +397,10 @@ RobotModelUpdate:
   publishVisual: true
   publishConvex: false
   defaultConfig:
-    human: Alice
+    human: Ruud
 RobotModelUpdate2:
   pluginName: RobotModelUpdate_human_2_estimated
   publishVisual: true
   publishConvex: false
   defaultConfig:
-    human: Arnaud
+    human: Louis

@@ -56,7 +56,7 @@ Human_2_HandTrajTasks:
         # frame: l_wrist
         frame: LARM_LINK6  #for hrp2
         translation: [0., 0.1, -0.15]
-        rotation: [-1.57, 0, 0]
+        rotation: [-1.57, 0, 1.57]
         controlPoints: [[0, 0.8, 0]]
       stiffness: 100
       dimWeight: [1, 1, 1, 1, 1, 1]

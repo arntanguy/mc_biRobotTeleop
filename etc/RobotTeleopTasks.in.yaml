@@ -14,11 +14,11 @@ RobotArm_1:
     # rotation: [0, 0., 0.] # for simple_human
     rotation: [-1.57, 0., 3.14] # for human
   variable_stiffness:
-    duration_to_full: 5
-    duration_at_low: 3
+    duration_to_full: 3
+    duration_at_low: 2
     low: 1
   variable_damping:
-    low: 40
+    low: 20
   task:
     type: transform
     unactiveJoints: ["Root", "CHEST_JOINT0", "CHEST_JOINT1"] #for hrp2

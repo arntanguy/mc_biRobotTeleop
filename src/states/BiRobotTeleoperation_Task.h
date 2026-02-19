@@ -30,7 +30,7 @@ struct BiRobotTeleoperation_Task : mc_control::fsm::State
 
   mc_rtc::Configuration state_config_;
 
-  double weight_ = 10;
+  double weight_ = 0;
   double stiffness_ = 0;
   double minDist_ = 0;
   double softMaxGain_ = 10;
@@ -38,6 +38,15 @@ struct BiRobotTeleoperation_Task : mc_control::fsm::State
   std::vector<double> dist_;
   // Used to get the transfo for the softmax computation
   size_t indx_sotfM = 0;
+
+
+  double low_stiffness_ = 0;
+  double low_damping_ = 10;
+
+  double dt_ = 0.005;
+  size_t count_ = 0;
+  double low_stiff_duration_ = 1; // duration the task is at low stiff
+  double full_stiff_duration_ = 1; // duration the task comes back to full stiff
 
   bool useEstimatedHuman_ = false;
 

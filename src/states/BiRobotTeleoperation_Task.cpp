@@ -41,6 +41,10 @@ void BiRobotTeleoperation_Task::start(mc_control::fsm::Controller & ctl_)
   state_config_("robot_1")("links", r1_linksName);
   state_config_("robot_2")("links", r2_linksName);
   state_config_("stiffness", stiffness_);
+  state_config_("variable_stiffness")("duration_to_full", full_stiff_duration_);
+  state_config_("variable_stiffness")("duration_at_low", low_stiff_duration_);
+  state_config_("variable_stiffness")("low",low_stiffness_);
+
 
   if(r1_linksName.size() == 0 || r2_linksName.size() == 0)
   {
@@ -57,7 +61,6 @@ void BiRobotTeleoperation_Task::start(mc_control::fsm::Controller & ctl_)
     for(auto & link : r2_linksName)
     {
       r1_links_.push_back(limb);
-      std::cout << link << std::endl;
       r2_links_.push_back(biRobotTeleop::str2Limb(link));
     }
   }
@@ -134,6 +137,10 @@ void BiRobotTeleoperation_Task::start(mc_control::fsm::Controller & ctl_)
   // posture_2->stiffness(0);
   // posture_1->damping(300);
   // posture_2->damping(3);
+
+  // stiffness_ = task_->stiffness();
+  dt_ = ctl_.timeStep;
+  count_ = 0;
 }
 
 bool BiRobotTeleoperation_Task::run(mc_control::fsm::Controller & ctl_)
@@ -169,7 +176,7 @@ bool BiRobotTeleoperation_Task::run(mc_control::fsm::Controller & ctl_)
     {
       distVel.push_back(0.);
     }
-    softMaxVec.push_back(dist.back() + deltaDistGain_ * exp(distVel.back()));
+    softMaxVec.push_back(dist.back() + deltaDistGain_ * exp(distVel.back())); // not used
     indx++;
   }
   dist_ = dist;
@@ -188,7 +195,33 @@ bool BiRobotTeleoperation_Task::run(mc_control::fsm::Controller & ctl_)
   {
     const double w = softMax(dist, -softMaxGain_, i);
     biTasks_[i]->weight(std::max(0., weight_ * w - deltaDistGain_ * exp(10 * distVel.back())));
+
+    if(hp_1.humanActive()&&hp_2.humanActive())
+    {
+      const double t_active = static_cast<double>(count_) * dt_;
+      if(t_active < low_stiff_duration_)
+      {
+        biTasks_[i]->stiffness(low_stiffness_);
+        count_ += 1;
+      }
+      else if(t_active <= low_stiff_duration_ + full_stiff_duration_)
+      {
+        const double alpha = (t_active - low_stiff_duration_) / (full_stiff_duration_);
+        biTasks_[i]->stiffness(low_stiffness_ + alpha * (stiffness_ - low_stiffness_));
+        count_ += 1;
+      }
+      // else
+      // {
+      //   stiffness_ = biTasks_[i]->stiffness();
+      // }
+    }
+    else
+    {
+      count_ = 0;
+    }
   }
+
+  
 
   output("OK");
   return true;

@@ -60,25 +60,6 @@ bool RelativePose::run(mc_control::fsm::Controller & ctl_)
   // if(h.limbActive(biRobotTeleop::Limbs::Pelvis) && h.limbActive(humanTargetLimb_))
   if(h.humanActive())
   {
-    const double t_active = static_cast<double>(count_) * dt_;
-    if(t_active < low_stiff_duration_)
-    {
-      task_->stiffness(low_stiffness_);
-      task_->damping(low_damping_);
-      count_ += 1;
-    }
-    else if(t_active <= low_stiff_duration_ + full_stiff_duration_)
-    {
-      const double alpha = (t_active - low_stiff_duration_) / (full_stiff_duration_);
-      task_->stiffness(low_stiffness_ + alpha * (stiffness_ - low_stiffness_));
-      task_->damping(low_damping_ + alpha *(damping_ - low_damping_));
-      count_ += 1;
-    }
-    else
-    {
-      stiffness_ = task_->stiffness();
-      task_->damping(damping_);
-    }
 
     X_0_hRef_ = h.getOffset(biRobotTeleop::Limbs::Pelvis) * h.getPose(biRobotTeleop::Limbs::Pelvis);
     X_0_hTarget_ = h.getOffset(humanTargetLimb_) * h.getPose(humanTargetLimb_);
@@ -92,8 +73,35 @@ bool RelativePose::run(mc_control::fsm::Controller & ctl_)
     const sva::PTransformd X_0_taskTarget =
         X_TargetHuman_TargetRobot_ * X_hRef_htarget * X_RefHuman_RefRobot_.inv() * X_0_RbtRef;
 
-    task_->target(X_0_taskTarget);
+    
     task_->refVelB(v_target);
+
+    const double t_active = static_cast<double>(count_) * dt_;
+    if(t_active < low_stiff_duration_)
+    {
+      task_->stiffness(low_stiffness_);
+      task_->damping(low_damping_);
+      task_->refVelB(sva::MotionVecd::Zero());
+      count_ += 1;
+    }
+    else if(t_active <= low_stiff_duration_ + full_stiff_duration_)
+    {
+      const double alpha = (t_active - low_stiff_duration_) / (full_stiff_duration_);
+      task_->stiffness(low_stiffness_ + alpha * (stiffness_ - low_stiffness_));
+      task_->damping(low_damping_ + alpha *(damping_ - low_damping_));
+      count_ += 1;
+
+      task_->refVelB(alpha * v_target);
+    }
+    else
+    {
+      stiffness_ = task_->stiffness();
+      task_->damping(damping_);
+    }
+
+    task_->target(X_0_taskTarget);
+
+    
 
     // if(abs((v_target.angular() - v_target_prev.angular()).norm()) > 1
     //    || abs((v_target.linear() - v_target_prev.linear()).norm()) > 0.7)

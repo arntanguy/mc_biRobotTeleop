@@ -11,14 +11,14 @@ human_1:
         #mc_human
 
         # translation: [0, 0.15, 0.1]
-        rotation: [0, -1.57, -1.57]
+        rotation: [0, -1.57, 1.57]
     arm:
       # radius: 0.05
       # length: 0.2
       offset:
         # mc_human
         left:
-          rotation: [0, 0, 3.14]
+          rotation: [0, 0, 0]
           # translation: [0, 0.2, 0.07]
         right:
           rotation: [-1.57, 0, 0]
@@ -29,7 +29,7 @@ human_1:
       offset:
         # mc_human
         left:
-          rotation: [0, 0, 3.14]
+          rotation: [0, 0, 0]
         right:
           rotation: [-1.57, 0, 0]
     hand:
@@ -38,7 +38,7 @@ human_1:
       offset:
         # mc_human
         left:
-          rotation: [0, 3.14, 3.14]
+          rotation: [0, 3.14, 0]
           # translation: [-0.05, 0.12, 0.05]
         right:
           rotation: [-1.57, 0, 0]
@@ -51,7 +51,7 @@ human_2:
       offset:
         #mc_human
         #rotation: [0, 0, 0]
-        rotation: [0, -1.57, -1.57]
+        rotation: [0, -1.57, 1.57]
     arm:
       # radius: 0.05
       # length: 0.2
@@ -60,7 +60,7 @@ human_2:
         left:
           rotation: [1.57, 0, 0]
         right:
-          rotation: [0.0, 3.14, 0]
+          rotation: [0.0, 3.14, 3.14]
     forearm:
       # radius: 0.03
       # length: 0.2
@@ -69,7 +69,7 @@ human_2:
         left:
           rotation: [1.57, 0, 0]
         right:
-          rotation: [0, 3.14, 0]
+          rotation: [0, 3.14, 3.14]
     hand:
       # radius: 0.03
       # length: 0.1
@@ -79,5 +79,5 @@ human_2:
           rotation: [1.57, 0, 0]
           # translation: [-0.05, 0.12, 0.05]
         right:
-          rotation: [0, 3.14, 0]
+          rotation: [0, 3.14, 3.14]
           # translation: [-0.05, 0.12, 0.05]

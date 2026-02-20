@@ -38,7 +38,7 @@ human_1:
       offset:
         # mc_human
         left:
-          rotation: [0, 3.14, 0]
+          rotation: [0, 3.14, 3.14]
           # translation: [-0.05, 0.12, 0.05]
         right:
           rotation: [-1.57, 0, 0]
@@ -79,5 +79,5 @@ human_2:
           rotation: [1.57, 0, 0]
           # translation: [-0.05, 0.12, 0.05]
         right:
-          rotation: [0, 3.14, 3.14]
+          rotation: [0, 3.14, 0]
           # translation: [-0.05, 0.12, 0.05]

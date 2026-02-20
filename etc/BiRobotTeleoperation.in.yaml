@@ -364,7 +364,8 @@ OpenVRPlugin:
 
 
   - ["RightArm_human_2", "LHR-5866134B"]
-  - ["RightHand_human_2", "LHR-DC90393E"]
+  - ["RightHand_human_2", "LHR-DC90393E"] 
+  # - ["RightHand_human_2", "LHR-FEFB9C65"]
   - ["Pelvis_human_2", "LHR-58687408"]
   - ["Robot_2", "LHR-D59475BF"]  # this one is placed on hrp2's head
 
@@ -397,10 +398,10 @@ RobotModelUpdate:
   publishVisual: true
   publishConvex: false
   defaultConfig:
-    human: Alice
+    human: Ruud
 RobotModelUpdate2:
   pluginName: RobotModelUpdate_human_2_estimated
   publishVisual: true
   publishConvex: false
   defaultConfig:
-    human: Arnaud
+    human: Louis

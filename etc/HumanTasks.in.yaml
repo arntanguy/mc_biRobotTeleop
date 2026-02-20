@@ -154,7 +154,7 @@ HumanPoseData_human_2:
   robot_link: Head #Robot link on which the device is attached
   link_sensor_transfo: #Transfo from link frame to sensor frame
     robot_1:
-      rotation: [-1.57, 0, 1.57]
+      rotation: [-3.14, 0, 1.57]
       # translation: [0, 0, 0.1]
       translation: [0.05, 0, 0.235] #for hrp2
     robot_2:

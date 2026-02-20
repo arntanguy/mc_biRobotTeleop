@@ -11,8 +11,8 @@ BiTeleopTask_1:
     shaft_diam: 0.005
   linearWeight:
     # weightRange: [5,20]
-    weightRange: [0, 100]
-    distanceRange: [0.6, 0.1]
+    weightRange: [10, 500]
+    distanceRange: [0.4, 0.1]
   robot_1:
     name: robot_1
     links: [LeftHand]
@@ -37,10 +37,6 @@ BiTeleopTask_1:
       vr:
         translation: [0., 0., 0.]
         rotation: [-1.57, 0., 0.] # for human
-  variable_stiffness:
-  duration_to_full: 3
-  duration_at_low: 2
-  low: 1
 
 
 BiTeleopTask_2:

@@ -5,7 +5,7 @@ MainRobot:
   module: RHPS1_sake2_sake2 #_forceshoe_forceshoe_lirmm_lirmm # desired robot module
 
 Enabled: BiRobotTeleoperation
-Log: true
+Log: false
 
 Timestep: 0.002
 
